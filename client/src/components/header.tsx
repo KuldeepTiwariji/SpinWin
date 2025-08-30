@@ -1,67 +1,40 @@
-import { useState } from "react";
-import { Heart, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from "react";
+import { mockUser } from "@/lib/mockData";
 
-interface HeaderProps {
-  onSearchChange: (query: string) => void;
-}
-
-export function Header({ onSearchChange }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    onSearchChange(query);
-  };
-
+function Header() {
   return (
-    <header className="sticky top-0 bg-background/80 backdrop-blur-sm border-b border-border z-30">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
-              <Input
-                type="text"
-                placeholder="Search games..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full pl-12 pr-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring search-glow"
-                data-testid="input-search"
-              />
-            </div>
+    <header className="">
+      <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-xl font-semibold text-foreground gradient-text">SpinWin Dashboard</h2>
+        </div>
+
+        <div className="flex items-center space-x-6">
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">Wallet Balance</p>
+            <p className="text-lg font-bold success-accent">
+              ${mockUser.balance.toLocaleString()}
+            </p>
           </div>
-          
-          {/* User Actions */}
-          <div className="flex items-center space-x-4 ml-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-favorites"
-            >
-              <Heart className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-profile"
-            >
-              <User className="h-5 w-5" />
-            </Button>
-            <Button
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              data-testid="button-login"
-            >
-              Log In
-            </Button>
+
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg">
+              {mockUser.name.charAt(0)}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-foreground">
+                {mockUser.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                VIP Member
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </header>
   );
 }
+
+export { Header };
+export default Header;

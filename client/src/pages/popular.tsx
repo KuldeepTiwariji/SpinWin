@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from "react";
-import { Sidebar } from "@/components/sidebar";
+import Sidebar  from "@/components/sidebar";
 import { Header } from "@/components/header";
 import { GameCard } from "@/components/game-card";
 import { popularGames } from "@/lib/mockData";
@@ -40,7 +40,7 @@ export default function Popular() {
       <div className="ml-20 lg:ml-64 min-h-screen">
         <Header onSearchChange={setSearchQuery} />
         
-        <main className="p-6">
+        <main className="p-12">
           {/* Page Header */}
           <section className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

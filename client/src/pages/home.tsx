@@ -47,7 +47,7 @@ export default function Home() {
       
       {/* Main Content */}
       <div className="ml-20 lg:ml-64 min-h-screen">
-        <Header onSearchChange={setSearchQuery} />
+        <Header />
         
         <main className="p-6">
           {/* Hero Banner */}
@@ -88,69 +88,6 @@ export default function Home() {
             </div>
           </section>
           
-          {/* Featured Games */}
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold" data-testid="text-featured-title">Our Top Games</h2>
-              <Button 
-                variant="ghost" 
-                className="text-primary hover:text-primary/80 font-medium"
-                data-testid="button-view-all-featured"
-              >
-                View all
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="grid-featured-games">
-              {filteredFeaturedGames.map((game) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  onClick={() => handleGameClick(game.id)}
-                />
-              ))}
-            </div>
-          </section>
-          
-          {/* Popular Games Section */}
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold" data-testid="text-popular-title">Popular This Week</h2>
-              <Button 
-                variant="ghost" 
-                className="text-primary hover:text-primary/80 font-medium"
-                data-testid="button-view-all-popular"
-              >
-                View all
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4" data-testid="grid-popular-games">
-              {filteredPopularGames.map((game) => (
-                <GameCard
-                  key={game.id}
-                  game={game}
-                  size="small"
-                  onClick={() => handleGameClick(game.id)}
-                />
-              ))}
-            </div>
-          </section>
-          
-          {/* Categories Grid */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-6" data-testid="text-categories-title">Browse by Category</h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" data-testid="grid-categories">
-              {gameCategories.map((category) => (
-                <CategoryCard
-                  key={category.id}
-                  category={category}
-                  onClick={() => handleCategoryClick(category.name)}
-                />
-              ))}
-            </div>
-          </section>
           
           {/* New Releases */}
           <section className="mb-12">

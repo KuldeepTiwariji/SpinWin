@@ -1,3 +1,4 @@
+
 import { type Game, type Category } from "@shared/schema";
 
 export const featuredGames: Game[] = [
@@ -100,6 +101,7 @@ export const popularGames: Game[] = [
     isFeatured: 0,
     createdAt: new Date("2023-12-12")
   },
+  
   {
     id: "9",
     title: "Robot Wars",
@@ -246,5 +248,183 @@ export const navigationItems = [
   { name: "Popular", icon: "fas fa-fire", href: "/popular" },
   { name: "Featured", icon: "fas fa-star", href: "/featured" },
   { name: "Recent", icon: "fas fa-clock", href: "/recent" },
-  { name: "Spin Wheel", icon: "fas fa-circle-notch", href: "/spin-wheel" }
+  { name: "Sports Betting", icon: "fas fa-futbol", href: "/sports-betting" },
+  { name: "Wallet", icon: "fas fa-wallet", href: "/wallet" },
+  { name: "Bet History", icon: "fas fa-history", href: "/bet-history" }
+];
+
+// Betting Application Data
+export interface BetHistory {
+  id: string;
+  game: string;
+  betType: string;
+  amount: number;
+  odds: number;
+  result: 'win' | 'loss' | 'pending';
+  payout?: number;
+  date: Date;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'bet' | 'win';
+  amount: number;
+  description: string;
+  date: Date;
+  status: 'completed' | 'pending' | 'failed';
+}
+
+export interface SportsMatch {
+  id: string;
+  sport: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeOdds: number;
+  awayOdds: number;
+  drawOdds?: number;
+  date: Date;
+  status: 'upcoming' | 'live' | 'finished';
+  score?: string;
+}
+
+export const mockUser = {
+  id: "1",
+  name: "Demo Player",
+  email: "demo@example.com",
+  balance: 5000,
+  totalDeposits: 10000,
+  totalWithdrawals: 3000,
+  totalBets: 2000,
+  totalWinnings: 2500,
+  joinDate: new Date("2024-01-01")
+};
+
+export const mockTransactions: Transaction[] = [
+  {
+    id: "1",
+    type: "deposit",
+    amount: 1000,
+    description: "Bank deposit",
+    date: new Date("2024-02-01"),
+    status: "completed"
+  },
+  {
+    id: "2",
+    type: "bet",
+    amount: -50,
+    description: "Spin Wheel Casino - Red bet",
+    date: new Date("2024-02-01"),
+    status: "completed"
+  },
+  {
+    id: "3",
+    type: "win",
+    amount: 100,
+    description: "Spin Wheel Casino - Win",
+    date: new Date("2024-02-01"),
+    status: "completed"
+  },
+  {
+    id: "4",
+    type: "bet",
+    amount: -25,
+    description: "Sports Bet - Real Madrid vs Barcelona",
+    date: new Date("2024-02-02"),
+    status: "completed"
+  },
+  {
+    id: "5",
+    type: "deposit",
+    amount: 500,
+    description: "Credit card deposit",
+    date: new Date("2024-02-03"),
+    status: "completed"
+  }
+];
+
+export const mockBetHistory: BetHistory[] = [
+  {
+    id: "1",
+    game: "Spin Wheel Casino",
+    betType: "Red",
+    amount: 50,
+    odds: 2.0,
+    result: "win",
+    payout: 100,
+    date: new Date("2024-02-01")
+  },
+  {
+    id: "2",
+    game: "Sports Betting",
+    betType: "Real Madrid Win",
+    amount: 25,
+    odds: 1.8,
+    result: "loss",
+    date: new Date("2024-02-02")
+  },
+  {
+    id: "3",
+    game: "Spin Wheel Casino",
+    betType: "Number 7",
+    amount: 10,
+    odds: 36.0,
+    result: "loss",
+    date: new Date("2024-02-03")
+  },
+  {
+    id: "4",
+    game: "Sports Betting",
+    betType: "Barcelona Win",
+    amount: 30,
+    odds: 2.2,
+    result: "pending",
+    date: new Date("2024-02-04")
+  }
+];
+
+export const mockSportsMatches: SportsMatch[] = [
+  {
+    id: "1",
+    sport: "Football",
+    homeTeam: "Real Madrid",
+    awayTeam: "Barcelona",
+    homeOdds: 1.8,
+    awayOdds: 2.2,
+    drawOdds: 3.4,
+    date: new Date("2024-02-10"),
+    status: "upcoming"
+  },
+  {
+    id: "2",
+    sport: "Basketball",
+    homeTeam: "Lakers",
+    awayTeam: "Warriors",
+    homeOdds: 1.9,
+    awayOdds: 1.9,
+    date: new Date("2024-02-11"),
+    status: "upcoming"
+  },
+  {
+    id: "3",
+    sport: "Football",
+    homeTeam: "Manchester United",
+    awayTeam: "Liverpool",
+    homeOdds: 2.1,
+    awayOdds: 1.7,
+    drawOdds: 3.6,
+    date: new Date("2024-02-05"),
+    status: "live",
+    score: "1-0"
+  },
+  {
+    id: "4",
+    sport: "Tennis",
+    homeTeam: "Djokovic",
+    awayTeam: "Nadal",
+    homeOdds: 1.6,
+    awayOdds: 2.4,
+    date: new Date("2024-02-03"),
+    status: "finished",
+    score: "6-4, 6-2"
+  }
 ];

@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from "react";
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
+import Sidebar from "@/components/sidebar";
+import  Header  from "@/components/header";
 import { GameCard } from "@/components/game-card";
 import { newGames } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";

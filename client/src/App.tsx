@@ -8,6 +8,9 @@ import Popular from "@/pages/popular";
 import Featured from "@/pages/featured";
 import Recent from "@/pages/recent";
 import SpinWheel from "@/pages/spin-wheel";
+import SportsBetting from "@/pages/sports-betting";
+import Wallet from "@/pages/wallet";
+import BetHistoryPage from "@/pages/bet-history";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +22,9 @@ function Router() {
       <Route path="/recent" component={Recent} />
       <Route path="/spin-wheel" component={SpinWheel} />
       <Route path="/category/:category" component={Home} />
+      <Route path="/sports-betting" component={SportsBetting} />
+      <Route path="/wallet" component={Wallet} />
+      <Route path="/bet-history" component={BetHistoryPage} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

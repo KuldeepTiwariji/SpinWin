@@ -14,9 +14,10 @@ interface SpinResult {
 
 export default function SpinWheel() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState({ name: "Player", balance: 1000 });
+  const [currentUser, setCurrentUser] = useState({ name: "Demo Player", balance: 5000 });
   const [betAmount, setBetAmount] = useState(10);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [lastResult, setLastResult] = useState<SpinResult | null>(null);
@@ -38,7 +39,6 @@ export default function SpinWheel() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setCurrentUser({ name: "Player", balance: 1000 });
     setGameHistory([]);
     setLastResult(null);
   };
@@ -49,8 +49,10 @@ export default function SpinWheel() {
       return;
     }
 
-    if (betAmount > currentUser.balance) {
-      alert("Insufficient balance!");
+    
+
+    if (!selectedNumber && !selectedColor) {
+      alert("Please select a number or color to bet on!");
       return;
     }
 
@@ -87,10 +89,6 @@ export default function SpinWheel() {
         result.prize = winnings;
       }
 
-      // Update balance
-      const newBalance = currentUser.balance - betAmount + winnings;
-      setCurrentUser(prev => ({ ...prev, balance: newBalance }));
-      
       setLastResult(result);
       setGameHistory(prev => [result, ...prev.slice(0, 9)]); // Keep last 10 results
       setIsSpinning(false);
@@ -160,15 +158,29 @@ export default function SpinWheel() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Spin Wheel */}
             <div className="lg:col-span-2">
-              <Card className="p-6">
-                <h2 className="text-2xl font-bold mb-6 text-center">Spin Wheel</h2>
+              <Card className="p-8 bg-gradient-to-br from-indigo-900/20 via-purple-900/20 to-pink-900/20 border-2 border-gradient-to-r border-yellow-500/30 shadow-2xl">
+                <div className="text-center mb-8">
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+                    🎰 Spin Wheel Casino
+                  </h2>
+                  <p className="text-lg text-muted-foreground">Place your bet and spin to win!</p>
+                </div>
                 
-                <div className="flex justify-center mb-6">
+                <div className="flex justify-center mb-8">
                   <div className="relative">
+                    {/* Outer glow effect */}
+                    <div className="absolute inset-0 w-96 h-96 rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 blur-xl opacity-30 animate-pulse"></div>
+                    
+                    {/* Main wheel */}
                     <div 
-                      className={`w-80 h-80 rounded-full border-8 border-yellow-500 relative overflow-hidden transition-transform duration-3000 ease-out ${isSpinning ? 'animate-spin' : ''}`}
-                      style={{ transform: `rotate(${rotation}deg)` }}
+                      className={`relative w-96 h-96 rounded-full border-8 border-gradient-to-r from-yellow-400 via-orange-500 to-red-500 shadow-2xl transition-transform duration-[4000ms] ease-out ${isSpinning ? '' : ''}`}
+                      style={{ 
+                        transform: `rotate(${rotation}deg)`,
+                        background: 'conic-gradient(from 0deg, #dc2626, #000000, #16a34a, #dc2626, #000000, #16a34a)',
+                        boxShadow: '0 0 50px rgba(255, 215, 0, 0.5), inset 0 0 30px rgba(0, 0, 0, 0.3)'
+                      }}
                     >
+                      {/* Wheel segments */}
                       {numbers.map((num, index) => {
                         const angle = (360 / 37) * index;
                         const color = getNumberColor(num);
@@ -178,14 +190,15 @@ export default function SpinWheel() {
                             className={`absolute w-full h-full ${
                               color === 'red' ? 'bg-red-600' : 
                               color === 'black' ? 'bg-gray-900' : 'bg-green-600'
-                            }`}
+                            } opacity-90`}
                             style={{
                               transform: `rotate(${angle}deg)`,
-                              clipPath: 'polygon(50% 50%, 50% 0%, 52.7% 0%)'
+                              clipPath: 'polygon(50% 50%, 50% 0%, 52.7% 0%)',
+                              borderRadius: '50%'
                             }}
                           >
                             <div 
-                              className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white font-bold text-sm"
+                              className="absolute top-6 left-1/2 transform -translate-x-1/2 text-white font-bold text-lg drop-shadow-lg"
                               style={{ transform: `rotate(${-angle}deg)` }}
                             >
                               {num}
@@ -193,29 +206,56 @@ export default function SpinWheel() {
                           </div>
                         );
                       })}
+                      
+                      {/* Center hub */}
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+                        <i className="fas fa-star text-white text-2xl"></i>
+                      </div>
                     </div>
                     
-                    {/* Pointer */}
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
-                      <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-yellow-500"></div>
+                    {/* Enhanced Pointer */}
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-4 z-10">
+                      <div className="relative">
+                        <div className="w-0 h-0 border-l-6 border-r-6 border-b-12 border-transparent border-b-yellow-400 drop-shadow-lg"></div>
+                        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Result Display */}
                 {lastResult && (
-                  <div className="text-center mb-4">
-                    <div className={`inline-block px-6 py-3 rounded-full text-white font-bold text-xl ${
-                      lastResult.color === 'red' ? 'bg-red-600' : 
-                      lastResult.color === 'black' ? 'bg-gray-900' : 'bg-green-600'
-                    }`}>
-                      {lastResult.number}
-                    </div>
-                    {lastResult.prize > 0 && (
-                      <div className="mt-2 text-2xl font-bold text-green-500">
-                        <i className="fas fa-trophy mr-2"></i>
-                        You won ${lastResult.prize}!
+                  <div className="text-center mb-6">
+                    <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 shadow-lg border border-purple-500/30">
+                      <div className="flex justify-center mb-4">
+                        <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full text-white font-bold text-2xl shadow-xl border-4 border-white ${
+                          lastResult.color === 'red' ? 'bg-gradient-to-r from-red-500 to-red-600' : 
+                          lastResult.color === 'black' ? 'bg-gradient-to-r from-gray-800 to-gray-900' : 'bg-gradient-to-r from-green-500 to-green-600'
+                        }`}>
+                          {lastResult.number}
+                        </div>
                       </div>
-                    )}
+                      
+                      {lastResult.prize > 0 ? (
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-yellow-400 mb-2 animate-bounce">
+                            🎉 WINNER! 🎉
+                          </div>
+                          <div className="text-2xl font-bold text-green-400">
+                            You won ${lastResult.prize}!
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <div className="text-xl font-bold text-red-400 mb-2">
+                            Better luck next time!
+                          </div>
+                          <div className="text-lg text-gray-300">
+                            Try again with a new bet
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </Card>
