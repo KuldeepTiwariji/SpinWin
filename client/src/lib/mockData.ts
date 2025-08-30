@@ -128,6 +128,18 @@ export const popularGames: Game[] = [
 
 export const newGames: Game[] = [
   {
+    id: "15",
+    title: "Spin Wheel Casino",
+    description: "Classic casino wheel betting game",
+    category: "Casino",
+    imageUrl: "https://images.unsplash.com/photo-1596838132731-3301c3fd4317?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=250",
+    rating: 49,
+    playCount: 5670,
+    isNew: 1,
+    isFeatured: 1,
+    createdAt: new Date("2024-01-30")
+  },
+  {
     id: "11",
     title: "Cyber Strike",
     description: "Cyberpunk action adventure",
@@ -219,6 +231,13 @@ export const gameCategories: Category[] = [
     icon: "fas fa-chess",
     color: "from-indigo-500/20 to-violet-500/20 border-indigo-500/30",
     gameCount: 87
+  },
+  {
+    id: "7",
+    name: "Casino",
+    icon: "fas fa-coins",
+    color: "from-yellow-500/20 to-orange-500/20 border-yellow-500/30",
+    gameCount: 24
   }
 ];
 
@@ -226,5 +245,6 @@ export const navigationItems = [
   { name: "Home", icon: "fas fa-home", href: "/" },
   { name: "Popular", icon: "fas fa-fire", href: "/popular" },
   { name: "Featured", icon: "fas fa-star", href: "/featured" },
-  { name: "Recent", icon: "fas fa-clock", href: "/recent" }
+  { name: "Recent", icon: "fas fa-clock", href: "/recent" },
+  { name: "Spin Wheel", icon: "fas fa-circle-notch", href: "/spin-wheel" }
 ];
