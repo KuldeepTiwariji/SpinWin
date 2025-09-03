@@ -1,78 +1,64 @@
-# GameHub - Gaming Platform
+# Overview
 
-## Overview
+This is a Ashok Gaming casino gaming web application that provides users with an immersive online casino experience. The application features a modern React frontend with a premium dark theme design, backed by an Express.js server and PostgreSQL database. The app includes various casino games and features like a spin wheel game with prize tracking, user authentication capabilities, and a sophisticated UI built with shadcn/ui components.
 
-GameHub is a modern gaming platform built with React and Express.js that provides users with a curated collection of games across various categories. The application features a game discovery interface with search functionality, categorized browsing, and a responsive design optimized for both desktop and mobile experiences.
-
-## User Preferences
+# User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-## System Architecture
+# System Architecture
 
-### Frontend Architecture
-- **Framework**: React with TypeScript using Vite as the build tool
-- **UI Library**: shadcn/ui components built on Radix UI primitives for accessible, customizable components
-- **Styling**: Tailwind CSS with custom CSS variables for theming, featuring a dark gaming-focused color scheme
-- **State Management**: TanStack Query (React Query) for server state management and API data fetching
-- **Routing**: Wouter for lightweight client-side routing
-- **Form Handling**: React Hook Form with Zod validation through @hookform/resolvers
+## Frontend Architecture
+- **Framework**: React 18 with TypeScript using Vite as the build tool
+- **Routing**: Wouter for client-side routing with pages for Home, Games, Spin Wheel, and About
+- **UI Framework**: shadcn/ui components built on Radix UI primitives for accessible, customizable components
+- **Styling**: Tailwind CSS with a premium dark casino theme featuring gold accents and Ashok Gaming fonts
+- **State Management**: TanStack React Query for server state management and data fetching
+- **Animations**: Framer Motion for smooth page transitions and interactive elements
+- **Component Structure**: Modular component architecture with reusable UI components and layout components
 
-### Backend Architecture
-- **Server Framework**: Express.js with TypeScript
-- **API Design**: RESTful API structure with dedicated routes for games, categories, and search functionality
-- **Development Setup**: Custom Vite integration for hot module replacement in development
-- **Storage Pattern**: Repository pattern with in-memory storage implementation (MemStorage class)
-- **Request Logging**: Custom middleware for API request logging and performance monitoring
+## Backend Architecture
+- **Framework**: Express.js with TypeScript running on Node.js
+- **API Design**: RESTful API with dedicated routes for spin results and user history
+- **Data Layer**: Drizzle ORM for type-safe database operations with PostgreSQL
+- **Storage Strategy**: In-memory storage implementation with interface for future database integration
+- **Error Handling**: Centralized error handling middleware with proper HTTP status codes
+- **Development Setup**: Vite integration for seamless development experience with HMR
 
-### Database Schema
-- **ORM**: Drizzle ORM with PostgreSQL dialect for type-safe database operations
-- **Schema Design**: 
-  - Users table with authentication fields
-  - Games table with metadata, ratings, and categorization
-  - Categories table with display information and game counts
-- **Validation**: Zod schemas generated from Drizzle table definitions for runtime type checking
+## Database Schema
+- **Users Table**: Stores user credentials with unique usernames and hashed passwords
+- **Spin Results Table**: Tracks spin wheel outcomes with prizes, credits, and timestamps
+- **Schema Management**: Drizzle Kit for database migrations and schema synchronization
+- **Validation**: Zod schemas for runtime type checking and API request validation
 
-### Component Architecture
-- **Design System**: Consistent component library with variants using class-variance-authority
-- **Layout**: Fixed sidebar navigation with responsive mobile behavior
-- **Game Display**: Card-based layouts with different sizes for featured/regular content
-- **Search Interface**: Real-time search with debounced filtering across games and categories
+## UI/UX Design Patterns
+- **Theme System**: Comprehensive CSS custom properties for consistent theming
+- **Typography**: Premium font stack with Playfair Display for headings and Inter for body text
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Component Variants**: Class Variance Authority for consistent component styling patterns
+- **Accessibility**: ARIA-compliant components with keyboard navigation support
 
-### Development Workflow
-- **TypeScript**: Strict type checking across client, server, and shared code
-- **Build Process**: Separate builds for client (Vite) and server (esbuild)
-- **Hot Reload**: Development server with automatic refresh for both frontend and backend changes
-- **Path Aliases**: Configured import aliases for clean code organization
+# External Dependencies
 
-## External Dependencies
-
-### Database & ORM
-- **Neon Database**: PostgreSQL serverless database using @neondatabase/serverless
-- **Drizzle Kit**: Database migrations and schema management
+## Database & ORM
+- **Neon Database**: Serverless PostgreSQL database for production deployment
+- **Drizzle ORM**: Type-safe database operations with automatic TypeScript inference
 - **connect-pg-simple**: PostgreSQL session store for Express sessions
 
-### UI & Styling
-- **Radix UI**: Comprehensive set of accessible UI primitives
-- **Tailwind CSS**: Utility-first CSS framework with custom configuration
-- **Lucide React**: Icon library for consistent iconography
-- **class-variance-authority**: Component variant management
-- **Font Awesome**: Additional icon support via CDN
+## UI & Styling
+- **Radix UI**: Headless component primitives for complex UI patterns
+- **Tailwind CSS**: Utility-first CSS framework with custom theme configuration
+- **Framer Motion**: Animation library for smooth transitions and interactions
+- **Lucide React**: Icon library with consistent styling
 
-### Development & Build Tools
-- **Vite**: Fast build tool with React plugin and runtime error overlay
-- **esbuild**: Server-side bundling for production builds
-- **tsx**: TypeScript execution for development server
-- **PostCSS**: CSS processing with Tailwind and Autoprefixer
+## Development Tools
+- **Vite**: Fast build tool with TypeScript support and HMR
+- **ESBuild**: JavaScript bundler for production builds
+- **PostCSS**: CSS processing with Tailwind and Autoprefixer plugins
+- **Replit Integration**: Development environment plugins for seamless deployment
 
-### Utilities & Enhancements
-- **date-fns**: Date manipulation and formatting
-- **clsx & tailwind-merge**: Conditional CSS class management
-- **cmdk**: Command palette/search interface component
-- **embla-carousel-react**: Touch-friendly carousel component
-- **nanoid**: Unique ID generation
-- **wouter**: Lightweight routing solution
-
-### Replit Integration
-- **@replit/vite-plugin-runtime-error-modal**: Development error handling
-- **@replit/vite-plugin-cartographer**: Development environment enhancements
+## Frontend Libraries
+- **TanStack React Query**: Server state management with caching and synchronization
+- **React Hook Form**: Form handling with validation and performance optimization
+- **Wouter**: Lightweight client-side routing solution
+- **Date-fns**: Date manipulation library for timestamp formatting

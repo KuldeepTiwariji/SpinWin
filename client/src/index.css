@@ -1,80 +1,55 @@
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: hsl(220, 13%, 9%);
-  --foreground: hsl(0, 0%, 95%);
-  --card: hsl(220, 13%, 11%);
-  --card-foreground: hsl(0, 0%, 95%);
-  --popover: hsl(220, 13%, 11%);
-  --popover-foreground: hsl(0, 0%, 95%);
-  --primary: hsl(47, 96%, 53%);
-  --primary-foreground: hsl(220, 13%, 9%);
-  --secondary: hsl(217, 32%, 17%);
-  --secondary-foreground: hsl(0, 0%, 95%);
-  --muted: hsl(215, 13%, 15%);
-  --muted-foreground: hsl(218, 11%, 65%);
-  --accent: hsl(142, 76%, 36%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(215, 27%, 16%);
-  --input: hsl(215, 27%, 16%);
-  --ring: hsl(47, 96%, 53%);
-  --sidebar: hsl(220, 13%, 8%);
-  --sidebar-foreground: hsl(0, 0%, 95%);
-  --sidebar-primary: hsl(47, 96%, 53%);
-  --sidebar-primary-foreground: hsl(220, 13%, 9%);
-  --sidebar-accent: hsl(217, 32%, 17%);
-  --sidebar-accent-foreground: hsl(0, 0%, 95%);
-  --sidebar-border: hsl(215, 27%, 16%);
-  --sidebar-ring: hsl(47, 96%, 53%);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --background: hsl(0 0% 6%);
+  --foreground: hsl(45 100% 92%);
+  --card: hsl(0 0% 10%);
+  --card-foreground: hsl(45 100% 92%);
+  --popover: hsl(0 0% 8%);
+  --popover-foreground: hsl(45 100% 92%);
+  --primary: hsl(45 100% 51%);
+  --primary-foreground: hsl(0 0% 6%);
+  --secondary: hsl(38 65% 45%);
+  --secondary-foreground: hsl(45 100% 92%);
+  --muted: hsl(0 0% 15%);
+  --muted-foreground: hsl(45 30% 70%);
+  --accent: hsl(42 95% 58%);
+  --accent-foreground: hsl(0 0% 6%);
+  --destructive: hsl(0 63% 31%);
+  --destructive-foreground: hsl(45 100% 92%);
+  --border: hsl(45 30% 25%);
+  --input: hsl(0 0% 15%);
+  --ring: hsl(45 100% 51%);
   --radius: 0.75rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00), 0px 1px 2px -1px hsl(263, 70%, 50% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00), 0px 1px 2px -1px hsl(263, 70%, 50% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00), 0px 2px 4px -1px hsl(263, 70%, 50% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00), 0px 4px 6px -1px hsl(263, 70%, 50% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00), 0px 8px 10px -1px hsl(263, 70%, 50% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(263, 70%, 50% / 0.00);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: Menlo, monospace;
 }
 
 .dark {
-  --background: hsl(220, 13%, 9%);
-  --foreground: hsl(0, 0%, 95%);
-  --card: hsl(220, 13%, 11%);
-  --card-foreground: hsl(0, 0%, 95%);
-  --popover: hsl(220, 13%, 11%);
-  --popover-foreground: hsl(0, 0%, 95%);
-  --primary: hsl(47, 96%, 53%);
-  --primary-foreground: hsl(220, 13%, 9%);
-  --secondary: hsl(217, 32%, 17%);
-  --secondary-foreground: hsl(0, 0%, 95%);
-  --muted: hsl(215, 13%, 15%);
-  --muted-foreground: hsl(218, 11%, 65%);
-  --accent: hsl(142, 76%, 36%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --border: hsl(215, 27%, 16%);
-  --input: hsl(215, 27%, 16%);
-  --ring: hsl(47, 96%, 53%);
-  --sidebar: hsl(220, 13%, 8%);
-  --sidebar-foreground: hsl(0, 0%, 95%);
-  --sidebar-primary: hsl(47, 96%, 53%);
-  --sidebar-primary-foreground: hsl(220, 13%, 9%);
-  --sidebar-accent: hsl(217, 32%, 17%);
-  --sidebar-accent-foreground: hsl(0, 0%, 95%);
-  --sidebar-border: hsl(215, 27%, 16%);
-  --sidebar-ring: hsl(47, 96%, 53%);
+  --background: hsl(0 0% 6%);
+  --foreground: hsl(45 100% 92%);
+  --card: hsl(0 0% 10%);
+  --card-foreground: hsl(45 100% 92%);
+  --popover: hsl(0 0% 8%);
+  --popover-foreground: hsl(45 100% 92%);
+  --primary: hsl(45 100% 51%);
+  --primary-foreground: hsl(0 0% 6%);
+  --secondary: hsl(38 65% 45%);
+  --secondary-foreground: hsl(45 100% 92%);
+  --muted: hsl(0 0% 15%);
+  --muted-foreground: hsl(45 30% 70%);
+  --accent: hsl(42 95% 58%);
+  --accent-foreground: hsl(0 0% 6%);
+  --destructive: hsl(0 63% 31%);
+  --destructive-foreground: hsl(45 100% 92%);
+  --border: hsl(45 30% 25%);
+  --input: hsl(0 0% 15%);
+  --ring: hsl(45 100% 51%);
 }
 
 @layer base {
@@ -83,52 +58,55 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
   }
 }
 
-@layer utilities {
+@layer components {
+  .Ashok Gaming-gradient {
+    background: linear-gradient(135deg, 
+      hsl(45 100% 51% / 0.1) 0%, 
+      hsl(38 65% 45% / 0.05) 50%, 
+      hsl(0 0% 6% / 1) 100%);
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 30px hsl(45 100% 51% / 0.3);
+  }
+
   .game-card {
-    transition: all 0.3s ease;
-    background: linear-gradient(145deg, hsl(220, 13%, 11%) 0%, hsl(217, 32%, 17%) 100%);
-    border: 1px solid hsl(215, 27%, 16%);
+    background: linear-gradient(145deg, 
+      hsl(0 0% 12%) 0%, 
+      hsl(0 0% 8%) 100%);
+    border: 2px solid hsl(45 30% 20%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .game-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(255, 193, 7, 0.4), 0 10px 10px -5px rgba(255, 193, 7, 0.2);
-    border-color: hsl(47, 96%, 53%);
+    border-color: var(--primary);
+    box-shadow: 0 20px 40px hsl(45 100% 51% / 0.2);
+    transform: translateY(-8px);
   }
-  
-  .sidebar-icon {
-    transition: all 0.2s ease;
+
+  .floating {
+    animation: float 6s ease-in-out infinite;
   }
-  
-  .sidebar-icon:hover {
-    color: hsl(47, 96%, 53%);
-    transform: scale(1.1);
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
   }
-  
-  .search-glow:focus {
-    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.4);
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(1440deg); }
   }
-  
-  .gradient-text {
-    background: linear-gradient(135deg, hsl(47, 96%, 53%), hsl(142, 76%, 36%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  .betting-accent {
-    color: hsl(47, 96%, 53%);
-  }
-  
-  .success-accent {
-    color: hsl(142, 76%, 36%);
-  }
-  
-  .danger-accent {
-    color: hsl(0, 84%, 60%);
+
+  .spinning {
+    animation: spin 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
   }
 }

@@ -1,118 +1,159 @@
-import { useState, useMemo } from "react";
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
-import { GameCard } from "@/components/game-card";
-import { CategoryCard } from "@/components/category-card";
-import { featuredGames, popularGames, newGames, gameCategories } from "@/lib/mockData";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import GameCard from "@/components/ui/game-card";
+import { useLocation } from "wouter";
+import { Shield, Gem, Trophy } from "lucide-react";
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [, setLocation] = useLocation();
 
-  const filteredFeaturedGames = useMemo(() => {
-    if (!searchQuery) return featuredGames;
-    return featuredGames.filter(game => 
-      game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+  const gameCategories = [
+    {
+      title: "POKER",
+      description: "Master the art of strategy",
+      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+      route: "/games"
+    },
+    {
+      title: "SLOT MACHINES", 
+      description: "Spin your way to fortune",
+      image: "https://images.unsplash.com/photo-1596838132731-3301c3fd4317?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+      route: "/games"
+    },
+    {
+      title: "BLACKJACK",
+      description: "Beat the dealer at 21", 
+      image: "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
+      route: "/games"
+    },
+    {
+      title: "CRAPS",
+      description: "Roll the dice of destiny",
+      image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300", 
+      route: "/games"
+    }
+  ];
 
-  const filteredPopularGames = useMemo(() => {
-    if (!searchQuery) return popularGames;
-    return popularGames.filter(game => 
-      game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
-
-  const filteredNewGames = useMemo(() => {
-    if (!searchQuery) return newGames;
-    return newGames.filter(game => 
-      game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
-
-  const handleGameClick = (gameId: string) => {
-    console.log(`Game ${gameId} clicked - navigation to be implemented`);
-  };
-
-  const handleCategoryClick = (categoryName: string) => {
-    console.log(`Category ${categoryName} clicked - filtering to be implemented`);
-  };
+  const features = [
+    {
+      icon: Shield,
+      title: "Secure Gaming",
+      description: "State-of-the-art security ensuring your data and funds are protected"
+    },
+    {
+      icon: Gem,
+      title: "Premium Experience", 
+      description: "Ashok Gaming gaming environment with premium graphics and smooth gameplay"
+    },
+    {
+      icon: Trophy,
+      title: "Big Rewards",
+      description: "Generous bonuses and rewards for our valued premium members"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      
-      {/* Main Content */}
-      <div className="ml-20 lg:ml-64 min-h-screen">
-        <Header />
-        
-        <main className="p-6">
-          {/* Hero Banner */}
-          <section className="mb-12">
-            <div className="bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl p-8 border border-primary/20" data-testid="hero-banner">
-              <div className="flex flex-col lg:flex-row items-center justify-between">
-                <div className="lg:w-1/2 mb-6 lg:mb-0">
-                  <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-                    <span className="gradient-text" data-testid="text-hero-title">4000+ Free Games</span>
-                  </h1>
-                  <p className="text-xl text-muted-foreground mb-6" data-testid="text-hero-subtitle">
-                    No downloads, no installs. Play instantly on any device!
-                  </p>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <i className="fas fa-download text-primary"></i>
-                      <span>No install needed</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <i className="fas fa-mobile-alt text-primary"></i>
-                      <span>On any device</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <i className="fas fa-users text-primary"></i>
-                      <span>Play with friends</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="lg:w-1/2 lg:pl-8">
-                  <img 
-                    src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" 
-                    alt="Gaming character with VR headset" 
-                    className="rounded-xl w-full h-auto"
-                    data-testid="img-hero"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-          
-          
-          {/* New Releases */}
-          <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold" data-testid="text-new-releases-title">New Releases</h2>
-              <Button 
-                variant="ghost" 
-                className="text-primary hover:text-primary/80 font-medium"
-                data-testid="button-view-all-new"
+    <div className="min-h-screen Ashok Gaming-gradient pt-16">
+      {/* Hero Section */}
+      <div className="relative min-h-screen flex items-center justify-center text-center px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.h1 
+            className="text-5xl md:text-7xl font-serif font-bold text-primary mb-6 floating"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            data-testid="hero-title"
+          >
+            Ashok Gaming GAMING
+          </motion.h1>
+          <motion.p 
+            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            data-testid="hero-description"
+          >
+            Experience the pinnacle of opulence and entertainment.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.6 }}
+          >
+            <Button 
+              onClick={() => setLocation("/spin-wheel")}
+              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-accent transition-all duration-300 hover:gold-glow transform hover:scale-105"
+              data-testid="button-play-now"
+            >
+              PLAY NOW
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Game Categories */}
+      <div className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.h2 
+            className="text-4xl font-serif font-bold text-center text-primary mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            data-testid="games-section-title"
+          >
+            Premium Games
+          </motion.h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {gameCategories.map((game, index) => (
+              <motion.div
+                key={game.title}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                View all
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="grid-new-games">
-              {filteredNewGames.map((game) => (
                 <GameCard
-                  key={game.id}
-                  game={game}
-                  onClick={() => handleGameClick(game.id)}
+                  title={game.title}
+                  description={game.description}
+                  image={game.image}
+                  onPlay={() => setLocation(game.route)}
                 />
-              ))}
-            </div>
-          </section>
-        </main>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="py-20 px-4 bg-muted/20">
+        <div className="max-w-6xl mx-auto">
+          <motion.h2 
+            className="text-4xl font-serif font-bold text-center text-primary mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            data-testid="features-section-title"
+          >
+            Why Choose Ashok Gaming Gaming
+          </motion.h2>
+          <div className="grid md:grid-cols-3 gap-12">
+            {features.map((feature, index) => (
+              <motion.div 
+                key={feature.title}
+                className="text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                data-testid={`feature-${feature.title.toLowerCase().replace(' ', '-')}`}
+              >
+                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <feature.icon className="text-primary text-2xl" />
+                </div>
+                <h3 className="text-xl font-semibold text-primary mb-4">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

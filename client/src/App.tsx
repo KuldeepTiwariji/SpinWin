@@ -3,31 +3,27 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Home from "@/pages/home";
-import Popular from "@/pages/popular";
-import Featured from "@/pages/featured";
-import Recent from "@/pages/recent";
-import SpinWheel from "@/pages/spin-wheel";
-import SportsBetting from "@/pages/sports-betting";
-import Wallet from "@/pages/wallet";
-import BetHistoryPage from "@/pages/bet-history";
 import NotFound from "@/pages/not-found";
+import Home from "@/pages/home";
+import Games from "@/pages/games";
+import SpinWheel from "@/pages/spin-wheel";
+import About from "@/pages/about";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/popular" component={Popular} />
-      <Route path="/featured" component={Featured} />
-      <Route path="/recent" component={Recent} />
-      <Route path="/spin-wheel" component={SpinWheel} />
-      <Route path="/category/:category" component={Home} />
-      <Route path="/sports-betting" component={SportsBetting} />
-      <Route path="/wallet" component={Wallet} />
-      <Route path="/bet-history" component={BetHistoryPage} />
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/games" component={Games} />
+        <Route path="/spin-wheel" component={SpinWheel} />
+        <Route path="/about" component={About} />
+        <Route component={NotFound} />
+      </Switch>
+      <Footer />
+    </div>
   );
 }
 
