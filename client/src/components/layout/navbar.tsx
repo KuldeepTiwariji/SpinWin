@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Crown } from "lucide-react";
+import { Menu, Crown, Vault } from "lucide-react";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -40,16 +40,29 @@ export default function Navbar() {
                 </span>
               </Link>
             ))}
+            <Link href="/vault" data-testid="nav-link-vault">
+              <span
+                className={`text-foreground hover:text-primary transition-colors duration-200 font-medium cursor-pointer ${
+                  location === "/vault" ? "text-primary" : ""
+                }`}
+              >
+                VAULT
+              </span>
+            </Link>
           </div>
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-foreground hover:text-primary" data-testid="button-login">
-              LOG IN
-            </Button>
-            <Button className="bg-primary text-primary-foreground hover:bg-accent" data-testid="button-signup">
-              SIGN UP
-            </Button>
+            <Link href="/login">
+              <Button variant="ghost" className="text-foreground hover:text-primary" data-testid="button-login">
+                LOG IN
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button className="bg-primary text-primary-foreground hover:bg-accent" data-testid="button-signup">
+                SIGN UP
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu */}

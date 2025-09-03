@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import GameCard from "@/components/ui/game-card";
+import { Slider } from "@/components/ui/slider";
 import { useLocation } from "wouter";
 import { Shield, Gem, Trophy } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const [betAmount, setBetAmount] = useState([100]);
 
   const gameCategories = [
     {
@@ -120,6 +123,63 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Slider Section */}
+      <div className="py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.h2 
+            className="text-4xl font-serif font-bold text-center text-primary mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            Experience Premium Gaming
+          </motion.h2>
+          <motion.div 
+            className="bg-card rounded-2xl p-8 border border-border"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="space-y-8">
+              <div className="text-center">
+                <h3 className="text-2xl font-semibold text-primary mb-4">Bet Amount</h3>
+                <p className="text-muted-foreground mb-6">Adjust your betting amount for the ultimate gaming experience</p>
+              </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Amount (USDT)</span>
+                    <span className="text-lg font-bold text-primary">${betAmount[0]}</span>
+                  </div>
+                  <div className="px-4">
+                    <Slider
+                      value={betAmount}
+                      onValueChange={setBetAmount}
+                      max={500}
+                      min={1}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>$1</span>
+                    <span>$500</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <Button 
+                    onClick={() => setLocation("/vault")}
+                    className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-accent transition-all duration-300 hover:gold-glow transform hover:scale-105"
+                  >
+                    Start Gaming
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
