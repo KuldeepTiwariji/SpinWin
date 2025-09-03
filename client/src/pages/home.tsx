@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import GameCard from "@/components/ui/game-card";
 import { Slider } from "@/components/ui/slider";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useLocation } from "wouter";
 import { Shield, Gem, Trophy } from "lucide-react";
 import { useState } from "react";
@@ -57,40 +58,78 @@ export default function Home() {
 
   return (
     <div className="min-h-screen Ashok Gaming-gradient pt-16">
-      {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center text-center px-4">
-        <div className="max-w-4xl mx-auto">
-          <motion.h1 
-            className="text-5xl md:text-7xl font-serif font-bold text-primary mb-6 floating"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            data-testid="hero-title"
-          >
-            Ashok Gaming GAMING
-          </motion.h1>
-          <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            data-testid="hero-description"
-          >
-            Experience the pinnacle of opulence and entertainment.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.6 }}
-          >
-            <Button 
-              onClick={() => setLocation("/spin-wheel")}
-              className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-accent transition-all duration-300 hover:gold-glow transform hover:scale-105"
-              data-testid="button-play-now"
-            >
-              PLAY NOW
-            </Button>
-          </motion.div>
+      {/* Hero Carousel Banner */}
+      <div className="relative max-h-screen flex items-center justify-center px-4">
+        <div className="max-w-12xl mx-auto w-full">
+          <Carousel className="w-full" opts={{ loop: true, align: "center" }}>
+            <CarouselContent>
+              <CarouselItem>
+                <motion.div 
+                  className="relative bg-gradient-to-r from-primary/20 to-accent/20 rounded-3xl p-12 text-center overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1 }}
+                >
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1596838132731-3301c3fd4317?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=800')] bg-cover bg-center opacity-20"></div>
+                  <div className="relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-primary mb-4">Welcome to Premium Gaming</h1>
+                    <p className="text-lg md:text-xl text-muted-foreground mb-8">Experience luxury casino gaming like never before</p>
+                    <Button 
+                      onClick={() => setLocation("/games")}
+                      className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-accent transition-all duration-300 hover:gold-glow transform hover:scale-105"
+                    >
+                      EXPLORE GAMES
+                    </Button>
+                  </div>
+                </motion.div>
+              </CarouselItem>
+              
+              <CarouselItem>
+                <motion.div 
+                  className="relative bg-gradient-to-r from-accent/20 to-secondary/20 rounded-3xl p-12 text-center overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1 }}
+                >
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=800')] bg-cover bg-center opacity-20"></div>
+                  <div className="relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-primary mb-4">Spin the Fortune Wheel</h1>
+                    <p className="text-lg md:text-xl text-muted-foreground mb-8">Try your luck with our exciting spin wheel game</p>
+                    <Button 
+                      onClick={() => setLocation("/spin-wheel")}
+                      className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-accent transition-all duration-300 hover:gold-glow transform hover:scale-105"
+                      data-testid="button-play-now"
+                    >
+                      SPIN NOW
+                    </Button>
+                  </div>
+                </motion.div>
+              </CarouselItem>
+              
+              <CarouselItem>
+                <motion.div 
+                  className="relative bg-gradient-to-r from-secondary/20 to-primary/20 rounded-3xl p-12 text-center overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1 }}
+                >
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=800')] bg-cover bg-center opacity-20"></div>
+                  <div className="relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-primary mb-4">Big Rewards Await</h1>
+                    <p className="text-lg md:text-xl text-muted-foreground mb-8">Join thousands of winners and claim your prizes</p>
+                    <Button 
+                      onClick={() => setLocation("/wallet")}
+                      className="px-8 py-4 bg-primary text-primary-foreground rounded-lg font-semibold text-lg hover:bg-accent transition-all duration-300 hover:gold-glow transform hover:scale-105"
+                    >
+                      VIEW REWARDS
+                    </Button>
+                  </div>
+                </motion.div>
+              </CarouselItem>
+            </CarouselContent>
+            <CarouselPrevious className="left-4" />
+            <CarouselNext className="right-4" />
+          </Carousel>
         </div>
       </div>
 

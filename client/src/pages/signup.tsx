@@ -4,25 +4,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    mobile: "",
     password: "",
     confirmPassword: ""
   });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signup } = useAuth();
+  const [, setLocation] = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match!");
       return;
     }
-    // Handle signup logic here
-    console.log("Signup attempt:", formData);
+
+    setIsLoading(true);
+
+    const { confirmPassword, ...signupData } = formData;
+    const success = await signup({ ...signupData, role: "user" });
+    
+    if (success) {
+      setLocation("/");
+    } else {
+      setError("Registration failed. Please try again.");
+    }
+    
+    setIsLoading(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,6 +67,11 @@ export default function Signup() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-red-600 bg-red-100 rounded-md">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input
@@ -68,6 +92,18 @@ export default function Signup() {
                   type="email"
                   placeholder="Enter your email"
                   value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobile">Mobile Number</Label>
+                <Input
+                  id="mobile"
+                  name="mobile"
+                  type="tel"
+                  placeholder="Enter your mobile number"
+                  value={formData.mobile}
                   onChange={handleChange}
                   required
                 />
@@ -96,8 +132,12 @@ export default function Signup() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary text-primary-foreground">
-                Sign Up
+              <Button 
+                type="submit" 
+                className="w-full bg-primary text-primary-foreground"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating Account..." : "Sign Up"}
               </Button>
             </form>
             <div className="mt-4 text-center text-sm">

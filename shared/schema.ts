@@ -6,7 +6,11 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  mobile: text("mobile").notNull(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("user"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const spinResults = pgTable("spin_results", {
@@ -18,6 +22,14 @@ export const spinResults = pgTable("spin_results", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  email: true,
+  mobile: true,
+  password: true,
+  role: true,
+});
+
+export const loginUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
 });
