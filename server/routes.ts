@@ -445,6 +445,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Number Betting Game Routes
+  // Play number betting game
+  app.post("/api/number-betting/play", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { userNumber, winningNumber, betAmount, multiplier, winAmount } = req.body;
+      
+      // Get user wallet
+      const wallet = await storage.getUserWallet(req.user.id);
+      if (!wallet || wallet.balance < betAmount) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      // Deduct bet amount from wallet
+      const newBalance = wallet.balance - betAmount + (winAmount || 0);
+      await storage.updateWalletBalance(req.user.id, newBalance);
+
+      // Record the bet
+      const betRecord = await storage.addNumberBet({
+        userId: req.user.id,
+        userNumber,
+        winningNumber,
+        betAmount,
+        multiplier: multiplier || 0,
+        winAmount: winAmount || 0,
+        isWin: (winAmount || 0) > 0
+      });
+
+      // Add transaction record
+      await storage.addTransaction({
+        userId: req.user.id,
+        type: winAmount > 0 ? 'number_betting_win' : 'number_betting_loss',
+        amount: winAmount > 0 ? winAmount - betAmount : -betAmount,
+        gameId: 'number-betting',
+        status: 'completed'
+      });
+
+      res.json({ success: true, newBalance, betRecord });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user's number betting history
+  app.get("/api/number-betting/history", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const history = await storage.getUserNumberBetHistory(req.user.id);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

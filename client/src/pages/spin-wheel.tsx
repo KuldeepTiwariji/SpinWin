@@ -1,21 +1,23 @@
-
 import { motion } from "framer-motion";
-import SpinWheel from "@/components/ui/spin-wheel";
+import NumberBetting from "@/components/ui/number-betting";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Coins, Gift, Star, Trophy, Target } from "lucide-react";
+import { Coins, Gift, Star, Trophy, Target, History } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function SpinWheelPage() {
+  const queryClient = useQueryClient();
+
   // Get user wallet
   const { data: wallet } = useQuery({
     queryKey: ['wallet'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
       if (!token) return null;
-      
+
       const response = await fetch('/api/wallet', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -23,6 +25,44 @@ export default function SpinWheelPage() {
       });
       if (!response.ok) throw new Error('Failed to fetch wallet');
       return response.json();
+    }
+  });
+
+  // Get betting history
+  const { data: bettingHistory = [] } = useQuery({
+    queryKey: ['betting-history'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return [];
+
+      const response = await fetch('/api/number-betting/history', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) return [];
+      return response.json();
+    }
+  });
+
+  // Place bet mutation
+  const placeBetMutation = useMutation({
+    mutationFn: async (betData: any) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/number-betting/play', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(betData)
+      });
+      if (!response.ok) throw new Error('Failed to place bet');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wallet'] });
+      queryClient.invalidateQueries({ queryKey: ['betting-history'] });
     }
   });
 
@@ -34,7 +74,7 @@ export default function SpinWheelPage() {
   ];
 
   const handleSpin = (result: any) => {
-    console.log("Spin result:", result);
+    placeBetMutation.mutate(result);
   };
 
   return (
@@ -45,6 +85,7 @@ export default function SpinWheelPage() {
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
+
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <motion.div 
@@ -55,14 +96,14 @@ export default function SpinWheelPage() {
         >
           <div className="relative inline-block">
             <h1 className="text-6xl md:text-7xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 mb-4 drop-shadow-lg">
-              🎲 Number Betting Wheel 🎯
+              🎯 Lucky Number Game 🍀
             </h1>
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 rounded-lg blur opacity-20"></div>
           </div>
           <p className="text-xl text-white mb-8 drop-shadow-lg">
-            ✨ Pick any number from 1 to 100, place your bet, and spin the wheel to see if you win! ✨
+            ✨ Pick your lucky number from 1 to 100, place your bet, and spin for fortune! ✨
           </p>
-          
+
           {/* User Stats */}
           <div className="flex justify-center gap-4 mb-8">
             <Card className="px-6 py-3">
@@ -74,21 +115,21 @@ export default function SpinWheelPage() {
             <Card className="px-6 py-3">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-green-600" />
-                <span className="font-semibold">Number Betting Game</span>
+                <span className="font-semibold">Lucky Number Betting</span>
               </div>
             </Card>
           </div>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Spin Wheel Section */}
+          {/* Number Betting Game */}
           <motion.div 
             className="lg:col-span-2 flex justify-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <SpinWheel onSpin={handleSpin} />
+            <NumberBetting onSpin={handleSpin} userBalance={wallet?.balance || 0} />
           </motion.div>
 
           {/* Info Panel */}
@@ -109,7 +150,7 @@ export default function SpinWheelPage() {
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">1</Badge>
-                  <span className="text-sm">Choose a number from 1 to 100</span>
+                  <span className="text-sm">Choose a lucky number (1-100)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">2</Badge>
@@ -117,7 +158,7 @@ export default function SpinWheelPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">3</Badge>
-                  <span className="text-sm">Spin the wheel to get a random number</span>
+                  <span className="text-sm">Spin to reveal the lucky number</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">4</Badge>
@@ -125,12 +166,12 @@ export default function SpinWheelPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">5</Badge>
-                  <span className="text-sm">Closer guesses = higher multipliers</span>
+                  <span className="text-sm">Closer guesses = bigger wins!</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Multiplier Information */}
+            {/* Win Multipliers */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -182,6 +223,63 @@ export default function SpinWheelPage() {
           </motion.div>
         </div>
 
+        {/* Betting History */}
+        <motion.div 
+          className="mt-16 mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Your Betting History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bettingHistory.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Your Number</TableHead>
+                      <TableHead>Lucky Number</TableHead>
+                      <TableHead>Bet Amount</TableHead>
+                      <TableHead>Multiplier</TableHead>
+                      <TableHead>Result</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bettingHistory.slice(0, 10).map((bet: any) => (
+                      <TableRow key={bet.id}>
+                        <TableCell className="font-medium">{bet.userNumber}</TableCell>
+                        <TableCell className="font-medium">{bet.winningNumber}</TableCell>
+                        <TableCell>{bet.betAmount}</TableCell>
+                        <TableCell>
+                          <Badge variant={bet.multiplier > 0 ? "default" : "secondary"}>
+                            {bet.multiplier}x
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className={bet.winAmount > bet.betAmount ? "text-green-600 font-semibold" : "text-red-600"}>
+                            {bet.winAmount > bet.betAmount ? `+${bet.winAmount - bet.betAmount}` : `-${bet.betAmount}`}
+                          </span>
+                        </TableCell>
+                        <TableCell>{new Date(bet.createdAt).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No betting history yet. Place your first bet to get started!
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Game Rules */}
         <motion.div 
           className="mt-16 mb-8"
@@ -191,14 +289,14 @@ export default function SpinWheelPage() {
         >
           <Card>
             <CardHeader>
-              <CardTitle className="text-center">Number Betting Rules & Payouts</CardTitle>
+              <CardTitle className="text-center">Lucky Number Game Rules & Payouts</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-6 text-sm text-muted-foreground">
                 <div>
                   <h4 className="font-medium text-foreground mb-2">Betting Rules</h4>
                   <ul className="space-y-1">
-                    <li>• Choose any number from 1 to 100</li>
+                    <li>• Choose any lucky number from 1 to 100</li>
                     <li>• Minimum bet is 10 credits</li>
                     <li>• Maximum bet is your wallet balance</li>
                     <li>• Credits are deducted before spinning</li>
@@ -216,10 +314,10 @@ export default function SpinWheelPage() {
                 <div>
                   <h4 className="font-medium text-foreground mb-2">Examples</h4>
                   <ul className="space-y-1">
-                    <li>• You pick 50, wheel shows 50: Win 50x</li>
-                    <li>• You pick 50, wheel shows 49: Win 10x</li>
-                    <li>• You pick 50, wheel shows 47: Win 5x</li>
-                    <li>• You pick 50, wheel shows 45: Win 2x</li>
+                    <li>• You pick 50, lucky number is 50: Win 50x</li>
+                    <li>• You pick 50, lucky number is 49: Win 10x</li>
+                    <li>• You pick 50, lucky number is 47: Win 5x</li>
+                    <li>• You pick 50, lucky number is 45: Win 2x</li>
                   </ul>
                 </div>
                 <div>

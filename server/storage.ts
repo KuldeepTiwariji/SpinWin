@@ -1,6 +1,6 @@
 import { type User, type InsertUser, type SpinResult, type InsertSpinResult, users, games, type InsertGame, type UpdateGame, type Game, spinResults, wallets, transactions, type Wallet, type Transaction, type InsertWallet, type InsertTransaction } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -28,6 +28,11 @@ export interface IStorage {
   updateWalletBalance(userId: string, amount: number): Promise<Wallet>;
   addTransaction(transactionData: InsertTransaction): Promise<Transaction>;
   getUserTransactions(userId: string): Promise<Transaction[]>;
+
+  // Betting operations
+  updateBettingConfig(gameType: string, data: any): Promise<any>;
+  addNumberBet(data: any): Promise<any>;
+  getUserNumberBetHistory(userId: string): Promise<any[]>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -187,6 +192,33 @@ export class PostgresStorage implements IStorage {
       .select()
       .from(transactions)
       .where(eq(transactions.userId, userId));
+  }
+
+  async updateBettingConfig(gameType: string, data: any) {
+    const [config] = await this.db
+      .update(bettingConfig)
+      .set(data)
+      .where(eq(bettingConfig.gameType, gameType))
+      .returning();
+    return config;
+  }
+
+  // Number Betting methods
+  async addNumberBet(data: any) {
+    const [bet] = await this.db
+      .insert(numberBets)
+      .values(data)
+      .returning();
+    return bet;
+  }
+
+  async getUserNumberBetHistory(userId: string) {
+    return await this.db
+      .select()
+      .from(numberBets)
+      .where(eq(numberBets.userId, userId))
+      .orderBy(desc(numberBets.createdAt))
+      .limit(50);
   }
 }
 
