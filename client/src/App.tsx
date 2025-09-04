@@ -24,6 +24,8 @@ import AdminNotifications from "./pages/admin/notifications";
 import AdminSecurity from "./pages/admin/security";
 import AdminSettings from "./pages/admin/settings";
 import { AuthProvider } from "@/contexts/auth-context";
+import { AdminRouteGuard } from "./components/admin-route-guard";
+import Profile from "./pages/profile";
 
 function App() {
   return (
@@ -35,16 +37,39 @@ function App() {
             <main className="flex-1">
               <Switch>
                 {/* Admin Routes */}
-                <Route path="/admin" component={AdminDashboard} />
-                <Route path="/admin/users" component={AdminUsers} />
-                <Route path="/admin/games" component={AdminGames} />
-                <Route path="/admin/spin-wheel" component={AdminSpinWheel} />
-                <Route path="/admin/transactions" component={AdminTransactions} />
-                <Route path="/admin/analytics" component={AdminAnalytics} />
-                <Route path="/admin/reports" component={AdminReports} />
-                <Route path="/admin/security" component={AdminSecurity} />
-                <Route path="/admin/settings" component={AdminSettings} />
-                <Route path="/admin/notifications" component={AdminNotifications} />
+                <Route path="/admin">
+                  <AdminRouteGuard><AdminDashboard /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/users">
+                  <AdminRouteGuard><AdminUsers /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/games">
+                  <AdminRouteGuard><AdminGames /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/spin-wheel">
+                  <AdminRouteGuard><AdminSpinWheel /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/transactions">
+                  <AdminRouteGuard><AdminTransactions /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/analytics">
+                  <AdminRouteGuard><AdminAnalytics /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/reports">
+                  <AdminRouteGuard><AdminReports /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/security">
+                  <AdminRouteGuard><AdminSecurity /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/settings">
+                  <AdminRouteGuard><AdminSettings /></AdminRouteGuard>
+                </Route>
+                <Route path="/admin/notifications">
+                  <AdminRouteGuard><AdminNotifications /></AdminRouteGuard>
+                </Route>
+
+                {/* User Routes */}
+                <Route path="/profile" component={Profile} />
 
                 {/* Regular Routes */}
                 <Route path="/" component={Home} />

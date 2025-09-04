@@ -13,12 +13,41 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const games = pgTable("games", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  status: text("status").notNull().default("active"),
+  players: integer("players").notNull().default(0),
+  revenue: integer("revenue").notNull().default(0),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const spinResults = pgTable("spin_results", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id"),
   prize: text("prize").notNull(),
   credits: integer("credits").notNull(),
   timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const wallets = pgTable("wallets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  balance: integer("balance").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const transactions = pgTable("transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(), // 'deposit', 'withdraw', 'game_earning'
+  amount: integer("amount").notNull(),
+  gameId: varchar("game_id"),
+  status: text("status").notNull().default("completed"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -34,13 +63,49 @@ export const loginUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
+export const insertGameSchema = createInsertSchema(games).pick({
+  name: true,
+  status: true,
+  players: true,
+  revenue: true,
+  description: true,
+});
+
+export const updateGameSchema = createInsertSchema(games).pick({
+  name: true,
+  status: true,
+  players: true,
+  revenue: true,
+  description: true,
+}).partial();
+
 export const insertSpinResultSchema = createInsertSchema(spinResults).pick({
   userId: true,
   prize: true,
   credits: true,
 });
 
+export const insertWalletSchema = createInsertSchema(wallets).pick({
+  userId: true,
+  balance: true,
+});
+
+export const insertTransactionSchema = createInsertSchema(transactions).pick({
+  userId: true,
+  type: true,
+  amount: true,
+  gameId: true,
+  status: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertGame = z.infer<typeof insertGameSchema>;
+export type UpdateGame = z.infer<typeof updateGameSchema>;
+export type Game = typeof games.$inferSelect;
 export type InsertSpinResult = z.infer<typeof insertSpinResultSchema>;
 export type SpinResult = typeof spinResults.$inferSelect;
+export type Wallet = typeof wallets.$inferSelect;
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertWallet = z.infer<typeof insertWalletSchema>;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

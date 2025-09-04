@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -24,30 +24,50 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Save, RotateCcw, Trash2, Settings, Gift, Zap } from "lucide-react"
+import { Plus, Save, RotateCcw, Trash2, Settings, Gift, Zap, TrendingUp } from "lucide-react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
-const spinWheelPrizes = [
-  { id: 1, name: "100 Credits", type: "credits", value: 100, probability: 30, color: "#FF6B6B", active: true },
-  { id: 2, name: "500 Credits", type: "credits", value: 500, probability: 20, color: "#4ECDC4", active: true },
-  { id: 3, name: "1000 Credits", type: "credits", value: 1000, probability: 15, color: "#45B7D1", active: true },
-  { id: 4, name: "Free Spin", type: "bonus", value: 1, probability: 10, color: "#96CEB4", active: true },
-  { id: 5, name: "2x Multiplier", type: "multiplier", value: 2, probability: 10, color: "#FFEAA7", active: true },
-  { id: 6, name: "Jackpot", type: "credits", value: 5000, probability: 5, color: "#DDA0DD", active: true },
-  { id: 7, name: "Better Luck", type: "nothing", value: 0, probability: 10, color: "#95A5A6", active: true },
-]
+interface SpinWheelPrize {
+  id: string;
+  name: string;
+  type: string;
+  value: number;
+  probability: number;
+  color: string;
+  active: boolean;
+}
 
-const spinWheelSettings = {
-  dailySpins: 5,
-  costPerSpin: 50,
-  minLevel: 1,
-  jackpotEnabled: true,
-  bonusMultiplier: 1.5,
-  animationDuration: 3000,
+interface SpinWheelSettings {
+  dailySpins: number;
+  costPerSpin: number;
+  minLevel: number;
+  jackpotEnabled: boolean;
+  bonusMultiplier: number;
+  animationDuration: number;
 }
 
 export default function AdminSpinWheel() {
-  const [prizes, setPrizes] = useState(spinWheelPrizes)
-  const [settings, setSettings] = useState(spinWheelSettings)
+  const queryClient = useQueryClient()
+  
+  const [prizes, setPrizes] = useState<SpinWheelPrize[]>([
+    { id: '1', name: "100 Credits", type: "credits", value: 100, probability: 30, color: "#FF6B6B", active: true },
+    { id: '2', name: "500 Credits", type: "credits", value: 500, probability: 20, color: "#4ECDC4", active: true },
+    { id: '3', name: "1000 Credits", type: "credits", value: 1000, probability: 15, color: "#45B7D1", active: true },
+    { id: '4', name: "Free Spin", type: "bonus", value: 1, probability: 10, color: "#96CEB4", active: true },
+    { id: '5', name: "2x Multiplier", type: "multiplier", value: 2, probability: 10, color: "#FFEAA7", active: true },
+    { id: '6', name: "Jackpot", type: "credits", value: 5000, probability: 5, color: "#DDA0DD", active: true },
+    { id: '7', name: "Better Luck", type: "nothing", value: 0, probability: 10, color: "#95A5A6", active: true },
+  ])
+
+  const [settings, setSettings] = useState<SpinWheelSettings>({
+    dailySpins: 5,
+    costPerSpin: 50,
+    minLevel: 1,
+    jackpotEnabled: true,
+    bonusMultiplier: 1.5,
+    animationDuration: 3000,
+  })
+
   const [newPrize, setNewPrize] = useState({
     name: "",
     type: "credits",
@@ -57,11 +77,42 @@ export default function AdminSpinWheel() {
     active: true
   })
 
+  // Get spin wheel game data
+  const { data: spinWheelGame } = useQuery({
+    queryKey: ['games'],
+    queryFn: async () => {
+      const response = await fetch('/api/games')
+      if (!response.ok) throw new Error('Failed to fetch games')
+      const games = await response.json()
+      return games.find((game: any) => game.name === 'Spin Wheel')
+    }
+  })
+
+  // Update game stats
+  const updateGameMutation = useMutation({
+    mutationFn: async (data: { players?: number; revenue?: number }) => {
+      if (!spinWheelGame) return
+      const response = await fetch(`/api/admin/games/${spinWheelGame.id}/stats`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      })
+      if (!response.ok) throw new Error('Failed to update game')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['games'] })
+    }
+  })
+
   const totalProbability = prizes.reduce((sum, prize) => sum + prize.probability, 0)
 
   const handleAddPrize = () => {
     if (newPrize.name && newPrize.probability > 0) {
-      setPrizes([...prizes, { ...newPrize, id: Date.now() }])
+      setPrizes([...prizes, { ...newPrize, id: Date.now().toString() }])
       setNewPrize({
         name: "",
         type: "credits",
@@ -73,15 +124,56 @@ export default function AdminSpinWheel() {
     }
   }
 
-  const handleDeletePrize = (id: number) => {
+  const handleDeletePrize = (id: string) => {
     setPrizes(prizes.filter(prize => prize.id !== id))
   }
 
-  const handleTogglePrize = (id: number) => {
+  const handleTogglePrize = (id: string) => {
     setPrizes(prizes.map(prize => 
       prize.id === id ? { ...prize, active: !prize.active } : prize
     ))
   }
+
+  const handleSaveSettings = () => {
+    // Save settings to localStorage or API
+    localStorage.setItem('spinWheelPrizes', JSON.stringify(prizes))
+    localStorage.setItem('spinWheelSettings', JSON.stringify(settings))
+    alert('Settings saved successfully!')
+  }
+
+  const handleResetSettings = () => {
+    // Reset to default values
+    setPrizes([
+      { id: '1', name: "100 Credits", type: "credits", value: 100, probability: 30, color: "#FF6B6B", active: true },
+      { id: '2', name: "500 Credits", type: "credits", value: 500, probability: 20, color: "#4ECDC4", active: true },
+      { id: '3', name: "1000 Credits", type: "credits", value: 1000, probability: 15, color: "#45B7D1", active: true },
+      { id: '4', name: "Free Spin", type: "bonus", value: 1, probability: 10, color: "#96CEB4", active: true },
+      { id: '5', name: "2x Multiplier", type: "multiplier", value: 2, probability: 10, color: "#FFEAA7", active: true },
+      { id: '6', name: "Jackpot", type: "credits", value: 5000, probability: 5, color: "#DDA0DD", active: true },
+      { id: '7', name: "Better Luck", type: "nothing", value: 0, probability: 10, color: "#95A5A6", active: true },
+    ])
+    setSettings({
+      dailySpins: 5,
+      costPerSpin: 50,
+      minLevel: 1,
+      jackpotEnabled: true,
+      bonusMultiplier: 1.5,
+      animationDuration: 3000,
+    })
+  }
+
+  // Load saved settings on component mount
+  useEffect(() => {
+    const savedPrizes = localStorage.getItem('spinWheelPrizes')
+    const savedSettings = localStorage.getItem('spinWheelSettings')
+    
+    if (savedPrizes) {
+      setPrizes(JSON.parse(savedPrizes))
+    }
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings))
+    }
+  }, [])
 
   const getPrizeTypeBadge = (type: string) => {
     switch (type) {
@@ -110,11 +202,11 @@ export default function AdminSpinWheel() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleResetSettings}>
               <RotateCcw className="mr-2 h-4 w-4" />
               Reset
             </Button>
-            <Button>
+            <Button onClick={handleSaveSettings}>
               <Save className="mr-2 h-4 w-4" />
               Save Changes
             </Button>
@@ -125,28 +217,28 @@ export default function AdminSpinWheel() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spins Today</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Players</CardTitle>
               <Zap className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2,347</div>
-              <p className="text-xs text-muted-foreground">+12% from yesterday</p>
+              <div className="text-2xl font-bold">{spinWheelGame?.players || 0}</div>
+              <p className="text-xs text-muted-foreground">Active players</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenue Today</CardTitle>
-              <Gift className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$1,847</div>
+              <div className="text-2xl font-bold">₹{spinWheelGame?.revenue || 0}</div>
               <p className="text-xs text-muted-foreground">From spin purchases</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Prizes</CardTitle>
-              <Settings className="h-4 w-4 text-blue-600" />
+              <Gift className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{prizes.filter(p => p.active).length}</div>
@@ -156,6 +248,7 @@ export default function AdminSpinWheel() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Probability Total</CardTitle>
+              <Settings className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${totalProbability === 100 ? 'text-green-600' : 'text-red-600'}`}>
@@ -183,7 +276,7 @@ export default function AdminSpinWheel() {
                 <CardDescription>Create a new prize for the spin wheel</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-5">
+                <div className="grid gap-4 md:grid-cols-6">
                   <div>
                     <Label htmlFor="prizeName">Prize Name</Label>
                     <Input
@@ -213,7 +306,7 @@ export default function AdminSpinWheel() {
                       id="prizeValue"
                       type="number"
                       value={newPrize.value}
-                      onChange={(e) => setNewPrize({...newPrize, value: parseInt(e.target.value)})}
+                      onChange={(e) => setNewPrize({...newPrize, value: parseInt(e.target.value) || 0})}
                       placeholder="0"
                     />
                   </div>
@@ -223,9 +316,18 @@ export default function AdminSpinWheel() {
                       id="prizeProbability"
                       type="number"
                       value={newPrize.probability}
-                      onChange={(e) => setNewPrize({...newPrize, probability: parseInt(e.target.value)})}
+                      onChange={(e) => setNewPrize({...newPrize, probability: parseInt(e.target.value) || 0})}
                       placeholder="0"
                       max="100"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="prizeColor">Color</Label>
+                    <Input
+                      id="prizeColor"
+                      type="color"
+                      value={newPrize.color}
+                      onChange={(e) => setNewPrize({...newPrize, color: e.target.value})}
                     />
                   </div>
                   <div className="flex items-end">
@@ -316,7 +418,7 @@ export default function AdminSpinWheel() {
                       id="dailySpins"
                       type="number"
                       value={settings.dailySpins}
-                      onChange={(e) => setSettings({...settings, dailySpins: parseInt(e.target.value)})}
+                      onChange={(e) => setSettings({...settings, dailySpins: parseInt(e.target.value) || 0})}
                     />
                   </div>
                   <div>
@@ -325,7 +427,7 @@ export default function AdminSpinWheel() {
                       id="costPerSpin"
                       type="number"
                       value={settings.costPerSpin}
-                      onChange={(e) => setSettings({...settings, costPerSpin: parseInt(e.target.value)})}
+                      onChange={(e) => setSettings({...settings, costPerSpin: parseInt(e.target.value) || 0})}
                     />
                   </div>
                   <div>
@@ -334,7 +436,7 @@ export default function AdminSpinWheel() {
                       id="minLevel"
                       type="number"
                       value={settings.minLevel}
-                      onChange={(e) => setSettings({...settings, minLevel: parseInt(e.target.value)})}
+                      onChange={(e) => setSettings({...settings, minLevel: parseInt(e.target.value) || 0})}
                     />
                   </div>
                   <div>
@@ -343,7 +445,7 @@ export default function AdminSpinWheel() {
                       id="animationDuration"
                       type="number"
                       value={settings.animationDuration}
-                      onChange={(e) => setSettings({...settings, animationDuration: parseInt(e.target.value)})}
+                      onChange={(e) => setSettings({...settings, animationDuration: parseInt(e.target.value) || 0})}
                     />
                   </div>
                 </div>
@@ -364,7 +466,7 @@ export default function AdminSpinWheel() {
                     type="number"
                     step="0.1"
                     value={settings.bonusMultiplier}
-                    onChange={(e) => setSettings({...settings, bonusMultiplier: parseFloat(e.target.value)})}
+                    onChange={(e) => setSettings({...settings, bonusMultiplier: parseFloat(e.target.value) || 0})}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
                     Multiplier applied to bonus prizes
@@ -381,40 +483,42 @@ export default function AdminSpinWheel() {
                 <CardDescription>View performance metrics and player engagement</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Most Popular Prizes</h4>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Game Performance</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>100 Credits</span>
-                        <span className="text-muted-foreground">45%</span>
+                        <span>Total Players</span>
+                        <span className="font-medium">{spinWheelGame?.players || 0}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>500 Credits</span>
-                        <span className="text-muted-foreground">25%</span>
+                        <span>Total Revenue</span>
+                        <span className="font-medium">₹{spinWheelGame?.revenue || 0}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>Better Luck</span>
-                        <span className="text-muted-foreground">15%</span>
+                        <span>Average Revenue per Player</span>
+                        <span className="font-medium">
+                          ₹{spinWheelGame?.players > 0 ? Math.round((spinWheelGame.revenue || 0) / spinWheelGame.players) : 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Game Status</span>
+                        <Badge variant={spinWheelGame?.status === 'active' ? 'default' : 'secondary'}>
+                          {spinWheelGame?.status || 'Unknown'}
+                        </Badge>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Daily Performance</h4>
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Prize Distribution</h4>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Total Spins</span>
-                        <span className="text-muted-foreground">2,347</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Credits Given</span>
-                        <span className="text-muted-foreground">487,500</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Revenue</span>
-                        <span className="text-muted-foreground">$1,847</span>
-                      </div>
+                      {prizes.filter(p => p.active).map((prize) => (
+                        <div key={prize.id} className="flex justify-between text-sm">
+                          <span>{prize.name}</span>
+                          <span className="text-muted-foreground">{prize.probability}%</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

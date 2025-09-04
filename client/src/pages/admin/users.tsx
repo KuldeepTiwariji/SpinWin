@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,66 +23,49 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Search, MoreHorizontal, UserPlus, Download, Filter } from "lucide-react"
 
-const users = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    username: "johndoe",
-    status: "active",
-    credits: 1250,
-    joinDate: "2024-01-15",
-    lastActive: "2024-01-20",
-    avatar: "/api/placeholder/32/32"
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    username: "janesmith",
-    status: "active",
-    credits: 850,
-    joinDate: "2024-01-12",
-    lastActive: "2024-01-19",
-    avatar: "/api/placeholder/32/32"
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    username: "mikej",
-    status: "suspended",
-    credits: 420,
-    joinDate: "2024-01-10",
-    lastActive: "2024-01-18",
-    avatar: "/api/placeholder/32/32"
-  },
-  {
-    id: 4,
-    name: "Sarah Wilson",
-    email: "sarah@example.com",
-    username: "sarahw",
-    status: "active",
-    credits: 2100,
-    joinDate: "2024-01-08",
-    lastActive: "2024-01-20",
-    avatar: "/api/placeholder/32/32"
-  },
-  {
-    id: 5,
-    name: "Tom Brown",
-    email: "tom@example.com",
-    username: "tombrown",
-    status: "inactive",
-    credits: 150,
-    joinDate: "2024-01-05",
-    lastActive: "2024-01-15",
-    avatar: "/api/placeholder/32/32"
-  },
-]
-
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const formattedUsers = data.map(user => ({
+          id: user.id,
+          name: user.username,
+          email: user.email,
+          username: user.username,
+          mobile: user.mobile,
+          status: "active",
+          credits: Math.floor(Math.random() * 2000) + 100, // Random credits for demo
+          joinDate: new Date(user.createdAt).toLocaleDateString(),
+          lastActive: new Date().toLocaleDateString(),
+          role: user.role,
+          avatar: `/api/placeholder/32/32`
+        }))
+        setUsers(formattedUsers)
+      } else {
+        console.error('Failed to fetch users')
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,6 +84,39 @@ export default function AdminUsers() {
       default:
         return <Badge variant="outline">{status}</Badge>
     }
+  }
+
+  const updateUserRole = async (userId: string, newRole: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+      })
+
+      if (response.ok) {
+        // Refresh users list
+        fetchUsers()
+      } else {
+        console.error('Failed to update user role')
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout breadcrumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Users" }]}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading users...</div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -133,8 +149,8 @@ export default function AdminUsers() {
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2,847</div>
-              <p className="text-xs text-muted-foreground">+180 from last month</p>
+              <div className="text-2xl font-bold">{users.length}</div>
+              <p className="text-xs text-muted-foreground">Registered users</p>
             </CardContent>
           </Card>
           <Card>
@@ -142,26 +158,26 @@ export default function AdminUsers() {
               <CardTitle className="text-sm font-medium">Active Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2,340</div>
-              <p className="text-xs text-muted-foreground">82% of total users</p>
+              <div className="text-2xl font-bold">{users.filter(u => u.status === 'active').length}</div>
+              <p className="text-xs text-muted-foreground">Currently active</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New This Month</CardTitle>
+              <CardTitle className="text-sm font-medium">Admin Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">180</div>
-              <p className="text-xs text-muted-foreground">+12% from last month</p>
+              <div className="text-2xl font-bold">{users.filter(u => u.role === 'admin').length}</div>
+              <p className="text-xs text-muted-foreground">Admin accounts</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Suspended</CardTitle>
+              <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">23</div>
-              <p className="text-xs text-muted-foreground">0.8% of total users</p>
+              <div className="text-2xl font-bold">{users.filter(u => u.role === 'user').length}</div>
+              <p className="text-xs text-muted-foreground">User accounts</p>
             </CardContent>
           </Card>
         </div>
@@ -192,10 +208,10 @@ export default function AdminUsers() {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Credits</TableHead>
                   <TableHead>Join Date</TableHead>
-                  <TableHead>Last Active</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -206,20 +222,27 @@ export default function AdminUsers() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.avatar} />
-                          <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{user.name}</div>
+                          <div className="font-medium">{user.username}</div>
                           <div className="text-sm text-muted-foreground">{user.email}</div>
+                          {user.mobile && (
+                            <div className="text-xs text-muted-foreground">{user.mobile}</div>
+                          )}
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                        {user.role}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(user.status)}
                     </TableCell>
                     <TableCell>{user.credits.toLocaleString()}</TableCell>
                     <TableCell>{user.joinDate}</TableCell>
-                    <TableCell>{user.lastActive}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -230,8 +253,16 @@ export default function AdminUsers() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Profile</DropdownMenuItem>
+                          {user.role === 'user' ? (
+                            <DropdownMenuItem onClick={() => updateUserRole(user.id, 'admin')}>
+                              Make Admin
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => updateUserRole(user.id, 'user')}>
+                              Remove Admin
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem>Edit User</DropdownMenuItem>
-                          <DropdownMenuItem>Reset Password</DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600">
                             Suspend User
                           </DropdownMenuItem>

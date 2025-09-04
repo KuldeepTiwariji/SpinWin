@@ -1,19 +1,86 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { DollarSign, ArrowUpDown, TrendingUp, Wallet } from "lucide-react";
+import { DollarSign, ArrowUpDown, TrendingUp, Wallet, Loader2 } from "lucide-react";
+
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  gameId?: string;
+  status: string;
+  createdAt: string;
+}
+
+interface WalletData {
+  id: string;
+  userId: string;
+  balance: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function Vault() {
-  const [usdtBalance] = useState(1250.50);
+  const [wallet, setWallet] = useState<WalletData | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [depositAmount, setDepositAmount] = useState([100]);
   const [withdrawAmount, setWithdrawAmount] = useState([50]);
   const [inputDeposit, setInputDeposit] = useState("100");
   const [inputWithdraw, setInputWithdraw] = useState("50");
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const { toast } = useToast();
+
+  const fetchWallet = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/wallet", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const walletData = await response.json();
+        setWallet(walletData);
+      }
+    } catch (error) {
+      console.error("Error fetching wallet:", error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/transactions", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const transactionsData = await response.json();
+        setTransactions(transactionsData);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([fetchWallet(), fetchTransactions()]);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
 
   const handleDepositSliderChange = (value: number[]) => {
     setDepositAmount(value);
@@ -34,18 +101,97 @@ export default function Vault() {
   const handleWithdrawInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value) || 0;
     setInputWithdraw(e.target.value);
-    setWithdrawAmount([Math.min(Math.max(value, 1), usdtBalance)]);
+    setWithdrawAmount([Math.min(Math.max(value, 1), wallet?.balance || 0)]);
   };
 
-  const handleDeposit = () => {
-    console.log("Depositing:", depositAmount[0], "USDT");
-    // Add deposit logic here
+  const handleDeposit = async () => {
+    setDepositLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/wallet/deposit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: depositAmount[0] })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Success",
+          description: `Deposited $${depositAmount[0]} successfully!`,
+        });
+        await fetchWallet();
+        await fetchTransactions();
+      } else {
+        throw new Error("Deposit failed");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to deposit money",
+        variant: "destructive",
+      });
+    } finally {
+      setDepositLoading(false);
+    }
   };
 
-  const handleWithdraw = () => {
-    console.log("Withdrawing:", withdrawAmount[0], "USDT");
-    // Add withdraw logic here
+  const handleWithdraw = async () => {
+    if (!wallet || withdrawAmount[0] > wallet.balance) {
+      toast({
+        title: "Error",
+        description: "Insufficient balance",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setWithdrawLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/wallet/withdraw", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: withdrawAmount[0] })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Success",
+          description: `Withdrew $${withdrawAmount[0]} successfully!`,
+        });
+        await fetchWallet();
+        await fetchTransactions();
+      } else {
+        throw new Error("Withdrawal failed");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to withdraw money",
+        variant: "destructive",
+      });
+    } finally {
+      setWithdrawLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const usdtBalance = wallet?.balance || 0;
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -84,13 +230,17 @@ export default function Vault() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-3 bg-muted rounded-lg">
                     <TrendingUp className="h-5 w-5 text-green-500 mx-auto mb-1" />
-                    <div className="text-sm font-medium">+12.5%</div>
-                    <div className="text-xs text-muted-foreground">This month</div>
+                    <div className="text-sm font-medium">
+                      {transactions.filter(t => t.type === 'game_earning').length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Games Played</div>
                   </div>
                   <div className="text-center p-3 bg-muted rounded-lg">
                     <DollarSign className="h-5 w-5 text-primary mx-auto mb-1" />
-                    <div className="text-sm font-medium">$156.25</div>
-                    <div className="text-xs text-muted-foreground">Total earned</div>
+                    <div className="text-sm font-medium">
+                      ${transactions.filter(t => t.type === 'game_earning').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Total Earned</div>
                   </div>
                 </div>
               </CardContent>
@@ -155,9 +305,17 @@ export default function Vault() {
                 </div>
                 <Button 
                   onClick={handleDeposit} 
+                  disabled={depositLoading}
                   className="w-full bg-green-600 hover:bg-green-700"
                 >
-                  Deposit USDT
+                  {depositLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Deposit USDT"
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -191,7 +349,7 @@ export default function Vault() {
                     <Slider
                       value={withdrawAmount}
                       onValueChange={handleWithdrawSliderChange}
-                      max={usdtBalance}
+                      max={usdtBalance || 1}
                       min={1}
                       step={1}
                       className="w-full"
@@ -221,10 +379,17 @@ export default function Vault() {
                 </div>
                 <Button 
                   onClick={handleWithdraw} 
+                  disabled={withdrawLoading || withdrawAmount[0] > usdtBalance}
                   className="w-full bg-red-600 hover:bg-red-700"
-                  disabled={withdrawAmount[0] > usdtBalance}
                 >
-                  Withdraw USDT
+                  {withdrawLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Withdraw USDT"
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -244,31 +409,52 @@ export default function Vault() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { type: "Deposit", amount: 500, date: "2024-01-15", status: "Completed" },
-                  { type: "Withdraw", amount: 150, date: "2024-01-14", status: "Completed" },
-                  { type: "Deposit", amount: 750, date: "2024-01-12", status: "Pending" },
-                ].map((tx, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${tx.type === "Deposit" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                        <ArrowUpDown className={`h-4 w-4 ${tx.type === "Deposit" ? "rotate-180" : ""}`} />
-                      </div>
-                      <div>
-                        <div className="font-medium">{tx.type}</div>
-                        <div className="text-sm text-muted-foreground">{tx.date}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`font-medium ${tx.type === "Deposit" ? "text-green-600" : "text-red-600"}`}>
-                        {tx.type === "Deposit" ? "+" : "-"}${tx.amount}
-                      </div>
-                      <div className={`text-sm ${tx.status === "Completed" ? "text-green-600" : "text-yellow-600"}`}>
-                        {tx.status}
-                      </div>
-                    </div>
+                {transactions.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    No transactions yet. Start playing games to earn money!
                   </div>
-                ))}
+                ) : (
+                  transactions.slice(0, 10).map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${
+                          tx.type === "deposit" || tx.type === "game_earning" 
+                            ? "bg-green-100 text-green-600" 
+                            : "bg-red-100 text-red-600"
+                        }`}>
+                          <ArrowUpDown className={`h-4 w-4 ${
+                            tx.type === "deposit" || tx.type === "game_earning" 
+                              ? "rotate-180" 
+                              : ""
+                          }`} />
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            {tx.type === "game_earning" ? "Game Earning" : 
+                             tx.type === "deposit" ? "Deposit" : "Withdraw"}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(tx.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-medium ${
+                          tx.type === "deposit" || tx.type === "game_earning" 
+                            ? "text-green-600" 
+                            : "text-red-600"
+                        }`}>
+                          {tx.type === "deposit" || tx.type === "game_earning" ? "+" : ""}${Math.abs(tx.amount)}
+                        </div>
+                        <div className={`text-sm ${
+                          tx.status === "completed" ? "text-green-600" : "text-yellow-600"
+                        }`}>
+                          {tx.status}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

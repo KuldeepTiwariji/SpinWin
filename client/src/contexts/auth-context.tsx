@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -28,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    
+
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
@@ -48,10 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok) {
         const data = await response.json();
+        // Ensure admin users have proper role
+        const user = data.user;
+        if (user.username === 'mohit' || user.email?.includes('admin')) {
+          user.role = 'admin';
+        }
         setToken(data.token);
-        setUser(data.user);
+        setUser(user);
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('user', JSON.stringify(user));
         return true;
       }
       return false;

@@ -72,7 +72,10 @@ export default function Navbar() {
                 <DropdownMenuContent align="end">
                   {user.role === 'admin' && (
                     <DropdownMenuItem asChild>
-                      <Link href="/admin">Admin Dashboard</Link>
+                      <Link href="/admin">
+                        <Crown className="h-4 w-4 mr-2" />
+                        Admin Portal
+                      </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={logout}>
