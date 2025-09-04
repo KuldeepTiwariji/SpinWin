@@ -2,7 +2,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertSpinResultSchema, insertUserSchema, loginUserSchema, insertGameSchema, updateGameSchema } from "@shared/schema";
+import { insertSpinResultSchema, insertUserSchema, loginUserSchema, insertGameSchema, updateGameSchema, insertBettingConfigSchema, updateBettingConfigSchema } from "@shared/schema";
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 
@@ -394,6 +394,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, newBalance });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Betting Config Routes
+  // Get betting config for a game type
+  app.get("/api/betting-config/:gameType", async (req, res) => {
+    try {
+      const { gameType } = req.params;
+      const config = await storage.getBettingConfig(gameType);
+      if (!config) {
+        return res.status(404).json({ message: "Betting config not found" });
+      }
+      res.json(config);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Get all betting configs
+  app.get("/api/admin/betting-config", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const configs = await storage.getAllBettingConfigs();
+      res.json(configs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Create betting config
+  app.post("/api/admin/betting-config", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertBettingConfigSchema.parse(req.body);
+      const config = await storage.createBettingConfig(validatedData);
+      res.status(201).json(config);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: Update betting config
+  app.put("/api/admin/betting-config/:gameType", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { gameType } = req.params;
+      const validatedData = updateBettingConfigSchema.parse(req.body);
+      const config = await storage.updateBettingConfig(gameType, validatedData);
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   });
 

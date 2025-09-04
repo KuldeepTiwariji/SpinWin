@@ -1,348 +1,451 @@
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Star, Coins } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Express } from "express";
+import { createServer, type Server } from "http";
 
-interface Prize {
-  id: string;
-  name: string;
-  type: string;
-  value: number;
-  probability: number;
-  color: string;
-  active: boolean;
+import { insertSpinResultSchema, insertUserSchema, loginUserSchema, insertGameSchema, updateGameSchema, insertBettingConfigSchema, updateBettingConfigSchema } from "@shared/schema";
+import jwt from "jsonwebtoken";
+import type { Request, Response, NextFunction } from "express";
+import storage  from "server/storage";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+interface AuthRequest extends Request {
+  user?: any;
 }
 
-interface SpinWheelProps {
-  onSpin?: (prize: Prize) => void;
-}
+// Middleware to verify JWT token
+const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-export default function SpinWheel({ onSpin }: SpinWheelProps) {
-  const queryClient = useQueryClient()
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
-  const [rotation, setRotation] = useState(0);
-  const [prizes, setPrizes] = useState<Prize[]>([]);
-  const [dailySpins, setDailySpins] = useState(0);
-  const [userCredits, setUserCredits] = useState(0);
-
-  // Load configuration from localStorage
-  useEffect(() => {
-    const savedPrizes = localStorage.getItem('spinWheelPrizes');
-    const savedSettings = localStorage.getItem('spinWheelSettings');
-    
-    if (savedPrizes) {
-      const parsedPrizes = JSON.parse(savedPrizes);
-      setPrizes(parsedPrizes.filter((p: Prize) => p.active));
-    } else {
-      // Default prizes
-      setPrizes([
-        { id: '1', name: "100 Credits", type: "credits", value: 100, probability: 30, color: "#FF6B6B", active: true },
-        { id: '2', name: "500 Credits", type: "credits", value: 500, probability: 20, color: "#4ECDC4", active: true },
-        { id: '3', name: "1000 Credits", type: "credits", value: 1000, probability: 15, color: "#45B7D1", active: true },
-        { id: '4', name: "Free Spin", type: "bonus", value: 1, probability: 10, color: "#96CEB4", active: true },
-        { id: '5', name: "2x Multiplier", type: "multiplier", value: 2, probability: 10, color: "#FFEAA7", active: true },
-        { id: '6', name: "Jackpot", type: "credits", value: 5000, probability: 5, color: "#DDA0DD", active: true },
-        { id: '7', name: "Better Luck", type: "nothing", value: 0, probability: 10, color: "#95A5A6", active: true },
-      ]);
-    }
-
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      setDailySpins(settings.dailySpins || 5);
-    }
-  }, []);
-
-  // Get user wallet
-  const { data: wallet } = useQuery({
-    queryKey: ['wallet'],
-    queryFn: async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      
-      const response = await fetch('/api/wallet', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch wallet');
-      return response.json();
-    }
-  });
-
-  // Update wallet after spin
-  const updateWalletMutation = useMutation({
-    mutationFn: async (amount: number) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/wallet/deposit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount })
-      });
-      if (!response.ok) throw new Error('Failed to update wallet');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wallet'] });
-    }
-  });
-
-  // Play game mutation to update stats
-  const playGameMutation = useMutation({
-    mutationFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/games', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch games');
-      const games = await response.json();
-      const spinWheelGame = games.find((game: any) => game.name === 'Spin Wheel');
-      
-      if (spinWheelGame) {
-        const playResponse = await fetch(`/api/games/${spinWheelGame.id}/play`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!playResponse.ok) throw new Error('Failed to play game');
-        return playResponse.json();
-      }
-    }
-  });
-
-  useEffect(() => {
-    setUserCredits(wallet?.balance || 0);
-  }, [wallet]);
-
-  const selectPrizeBasedOnProbability = () => {
-    const random = Math.random() * 100;
-    let cumulativeProbability = 0;
-
-    for (const prize of prizes) {
-      cumulativeProbability += prize.probability;
-      if (random <= cumulativeProbability) {
-        return prize;
-      }
-    }
-    return prizes[prizes.length - 1]; // Fallback to last prize
-  };
-
-  const handleSpin = async () => {
-    if (isSpinning || prizes.length === 0) return;
-
-    // Check if user has free spins or enough credits
-    const savedSpinsToday = parseInt(localStorage.getItem('spinsToday') || '0');
-    const today = new Date().toDateString();
-    const lastSpinDate = localStorage.getItem('lastSpinDate');
-
-    let canSpin = false;
-    if (lastSpinDate !== today) {
-      // Reset daily spins
-      localStorage.setItem('spinsToday', '0');
-      localStorage.setItem('lastSpinDate', today);
-      canSpin = true;
-    } else if (savedSpinsToday < dailySpins) {
-      canSpin = true;
-    } else if (userCredits >= 50) { // Cost per spin
-      canSpin = true;
-    }
-
-    if (!canSpin) {
-      alert('No free spins remaining and insufficient credits!');
-      return;
-    }
-
-    setIsSpinning(true);
-    setSelectedPrize(null);
-
-    // Deduct credits if no free spins
-    if (savedSpinsToday >= dailySpins && userCredits >= 50) {
-      // This would be handled by the backend in a real implementation
-    } else {
-      // Increment daily spins count
-      localStorage.setItem('spinsToday', (savedSpinsToday + 1).toString());
-    }
-
-    // Select prize based on probability
-    const selectedPrize = selectPrizeBasedOnProbability();
-    
-    // Calculate rotation
-    const prizeIndex = prizes.findIndex(p => p.id === selectedPrize.id);
-    const anglePerPrize = 360 / prizes.length;
-    const prizeAngle = prizeIndex * anglePerPrize;
-    const spins = 5 + Math.random() * 5; // 5-10 full rotations
-    const finalRotation = rotation + spins * 360 + (360 - prizeAngle);
-    
-    setRotation(finalRotation);
-
-    // Play game to update stats
-    playGameMutation.mutate();
-
-    setTimeout(() => {
-      setIsSpinning(false);
-      setSelectedPrize(selectedPrize);
-      
-      // Add credits to wallet if prize is credits
-      if (selectedPrize.type === 'credits' && selectedPrize.value > 0) {
-        updateWalletMutation.mutate(selectedPrize.value);
-      }
-      
-      onSpin?.(selectedPrize);
-    }, 3000);
-  };
-
-  const resetWheel = () => {
-    setSelectedPrize(null);
-  };
-
-  const getSpinButtonText = () => {
-    const savedSpinsToday = parseInt(localStorage.getItem('spinsToday') || '0');
-    const today = new Date().toDateString();
-    const lastSpinDate = localStorage.getItem('lastSpinDate');
-
-    if (isSpinning) return 'SPINNING...';
-    
-    if (lastSpinDate !== today || savedSpinsToday < dailySpins) {
-      const remaining = lastSpinDate !== today ? dailySpins : dailySpins - savedSpinsToday;
-      return `FREE SPIN (${remaining} left)`;
-    }
-    
-    return `SPIN (50 Credits)`;
-  };
-
-  if (prizes.length === 0) {
-    return (
-      <Card className="p-8 text-center">
-        <CardContent>
-          <p className="text-muted-foreground">No active prizes configured</p>
-        </CardContent>
-      </Card>
-    );
+  if (!token) {
+    return res.status(401).json({ message: 'Access token required' });
   }
 
-  return (
-    <div className="flex flex-col items-center space-y-8">
-      {/* User Credits Display */}
-      <Card className="px-6 py-3">
-        <div className="flex items-center gap-2">
-          <Coins className="h-5 w-5 text-yellow-600" />
-          <span className="font-semibold">Credits: {userCredits}</span>
-        </div>
-      </Card>
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid token' });
+    }
+    req.user = user;
+    next();
+  });
+};
 
-      {/* Spin Wheel */}
-      <div className="relative">
-        <motion.div
-          className="w-80 h-80 rounded-full border-8 border-primary relative overflow-hidden"
-          animate={{ rotate: rotation }}
-          transition={{ duration: 3, ease: "easeOut" }}
-          data-testid="spin-wheel"
-        >
-          {/* Prize segments */}
-          {prizes.map((prize, index) => {
-            const anglePerPrize = 360 / prizes.length;
-            const startAngle = index * anglePerPrize;
-            const endAngle = (index + 1) * anglePerPrize;
-            
-            return (
-              <div
-                key={prize.id}
-                className="absolute inset-0"
-                style={{
-                  background: `conic-gradient(from ${startAngle}deg, ${prize.color} ${startAngle}deg ${endAngle}deg, transparent ${endAngle}deg)`
-                }}
-              />
-            );
-          })}
-          
-          {/* Prize labels */}
-          {prizes.map((prize, index) => {
-            const anglePerPrize = 360 / prizes.length;
-            const angle = (index * anglePerPrize) + (anglePerPrize / 2);
-            const radian = (angle * Math.PI) / 180;
-            const radius = 120;
-            const x = Math.cos(radian) * radius;
-            const y = Math.sin(radian) * radius;
-            
-            return (
-              <div
-                key={`${prize.id}-label`}
-                className="absolute text-xs font-bold text-white text-center"
-                style={{
-                  left: `calc(50% + ${x}px - 30px)`,
-                  top: `calc(50% + ${y}px - 10px)`,
-                  width: '60px',
-                  transform: `rotate(${angle + 90}deg)`,
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                }}
-              >
-                {prize.name.split(' ')[0]}
-              </div>
-            );
-          })}
+// Middleware to check admin role
+const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
 
-          {/* Center hub */}
-          <div className="absolute inset-0 rounded-full flex items-center justify-center">
-            <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center shadow-lg">
-              <Star className="text-primary-foreground text-2xl" />
-            </div>
-          </div>
-          
-          {/* Pointer */}
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-            <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-transparent border-b-primary"></div>
-          </div>
-        </motion.div>
-      </div>
+export async function registerRoutes(app: Express): Promise<Server> {
+  // User registration
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
 
-      {/* Spin Button */}
-      <Button
-        onClick={handleSpin}
-        disabled={isSpinning}
-        className="px-12 py-4 bg-primary text-primary-foreground rounded-full font-bold text-xl hover:bg-accent transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-        data-testid="button-spin"
-      >
-        {getSpinButtonText()}
-      </Button>
+      const existingEmail = await storage.getUserByEmail(validatedData.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
 
-      {/* Result Display */}
-      {selectedPrize && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-card rounded-xl p-8 border border-border text-center max-w-md"
-          data-testid="result-display"
-        >
-          <h3 className="text-2xl font-bold text-primary mb-4">
-            {selectedPrize.type === 'nothing' ? 'Better Luck Next Time!' : 'Congratulations!'}
-          </h3>
-          {selectedPrize.type !== 'nothing' && (
-            <p className="text-xl text-foreground mb-4">
-              You won: <span className="text-accent font-bold" data-testid="prize-text">
-                {selectedPrize.name}
-                {selectedPrize.type === 'credits' && ` (+${selectedPrize.value} Credits)`}
-              </span>
-            </p>
-          )}
-          <Button 
-            onClick={resetWheel}
-            className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-colors duration-200"
-            data-testid="button-spin-again"
-          >
-            Spin Again
-          </Button>
-        </motion.div>
-      )}
-    </div>
-  );
+      const user = await storage.createUser(validatedData);
+      
+      // Create wallet for new user
+      await storage.createWallet({
+        userId: user.id,
+        balance: 0
+      });
+
+      const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role
+        },
+        token
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // User login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const validatedData = loginUserSchema.parse(req.body);
+      const user = await storage.validateUser(validatedData.username, validatedData.password);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role
+        },
+        token
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Get current user profile
+  app.get("/api/auth/profile", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = await storage.getUserByUsername(req.user.username);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Get all users
+  app.get("/api/admin/users", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const sanitizedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        createdAt: user.createdAt
+      }));
+      res.json(sanitizedUsers);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Update user role
+  app.put("/api/admin/users/:userId/role", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+
+      if (!["user", "admin"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      const user = await storage.updateUserRole(userId, role);
+      res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Spin wheel result endpoint
+  app.post("/api/spin", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertSpinResultSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const result = await storage.createSpinResult(validatedData);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Get user spin history
+  app.get("/api/spin-history", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const results = await storage.getUserSpinResults(req.user.id);
+      res.json(results);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Games routes
+  // Get all games (public)
+  app.get("/api/games", async (req, res) => {
+    try {
+      const games = await storage.getAllGames();
+      res.json(games);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get game by ID (public)
+  app.get("/api/games/:gameId", async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const game = await storage.getGameById(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      res.json(game);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Create game
+  app.post("/api/admin/games", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertGameSchema.parse(req.body);
+      const game = await storage.createGame(validatedData);
+      res.status(201).json(game);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: Update game
+  app.put("/api/admin/games/:gameId", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const validatedData = updateGameSchema.parse(req.body);
+      const game = await storage.updateGame(gameId, validatedData);
+      res.json(game);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: Delete game
+  app.delete("/api/admin/games/:gameId", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const success = await storage.deleteGame(gameId);
+      if (!success) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      res.json({ message: "Game deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Update game stats
+  app.put("/api/admin/games/:gameId/stats", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const { players, revenue } = req.body;
+      const game = await storage.updateGameStats(gameId, players, revenue);
+      res.json(game);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Play game - increment player count and add revenue
+  app.post("/api/games/:gameId/play", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const game = await storage.getGameById(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Increment player count and add random revenue between 10-100
+      const newPlayers = game.players + 1;
+      const addedRevenue = Math.floor(Math.random() * 91) + 10; // 10-100
+      const newRevenue = game.revenue + addedRevenue;
+      
+      // Get user wallet and update balance
+      let userWallet = await storage.getUserWallet(req.user.id);
+      if (!userWallet) {
+        userWallet = await storage.createWallet({
+          userId: req.user.id,
+          balance: 0
+        });
+      }
+
+      const newBalance = userWallet.balance + addedRevenue;
+      await storage.updateWalletBalance(req.user.id, newBalance);
+
+      // Add transaction record
+      await storage.addTransaction({
+        userId: req.user.id,
+        type: 'game_earning',
+        amount: addedRevenue,
+        gameId: gameId,
+        status: 'completed'
+      });
+      
+      const updatedGame = await storage.updateGameStats(gameId, newPlayers, newRevenue);
+      res.json({ game: updatedGame, earnedRevenue: addedRevenue, newWalletBalance: newBalance });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user wallet
+  app.get("/api/wallet", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      let wallet = await storage.getUserWallet(req.user.id);
+      if (!wallet) {
+        wallet = await storage.createWallet({
+          userId: req.user.id,
+          balance: 0
+        });
+      }
+      res.json(wallet);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get user transactions
+  app.get("/api/transactions", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const transactions = await storage.getUserTransactions(req.user.id);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Withdraw from wallet
+  app.post("/api/wallet/withdraw", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { amount } = req.body;
+      const wallet = await storage.getUserWallet(req.user.id);
+      
+      if (!wallet || wallet.balance < amount) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      const newBalance = wallet.balance - amount;
+      await storage.updateWalletBalance(req.user.id, newBalance);
+
+      await storage.addTransaction({
+        userId: req.user.id,
+        type: 'withdraw',
+        amount: -amount,
+        status: 'completed'
+      });
+
+      res.json({ success: true, newBalance });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Deposit to wallet
+  app.post("/api/wallet/deposit", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { amount } = req.body;
+      let wallet = await storage.getUserWallet(req.user.id);
+      
+      if (!wallet) {
+        wallet = await storage.createWallet({
+          userId: req.user.id,
+          balance: 0
+        });
+      }
+
+      const newBalance = wallet.balance + amount;
+      await storage.updateWalletBalance(req.user.id, newBalance);
+
+      await storage.addTransaction({
+        userId: req.user.id,
+        type: 'deposit',
+        amount: amount,
+        status: 'completed'
+      });
+
+      res.json({ success: true, newBalance });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Betting Config Routes
+  // Get betting config for a game type
+  app.get("/api/betting-config/:gameType", async (req, res) => {
+    try {
+      const { gameType } = req.params;
+      const config = await storage.getBettingConfig(gameType);
+      if (!config) {
+        return res.status(404).json({ message: "Betting config not found" });
+      }
+      res.json(config);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Get all betting configs
+  app.get("/api/admin/betting-config", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const configs = await storage.getAllBettingConfigs();
+      res.json(configs);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin: Create betting config
+  app.post("/api/admin/betting-config", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertBettingConfigSchema.parse(req.body);
+      const config = await storage.createBettingConfig(validatedData);
+      res.status(201).json(config);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Admin: Update betting config
+  app.put("/api/admin/betting-config/:gameType", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const { gameType } = req.params;
+      const validatedData = updateBettingConfigSchema.parse(req.body);
+      const config = await storage.updateBettingConfig(gameType, validatedData);
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
 }

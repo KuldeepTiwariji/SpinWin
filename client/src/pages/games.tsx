@@ -42,31 +42,19 @@ export default function Games() {
     return 'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400';
   };
 
-  const playGame = async (gameId: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to play games");
-        return;
-      }
+  const playGame = (gameId: string, gameName: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to play games");
+      return;
+    }
 
-      const response = await fetch(`/api/games/${gameId}/play`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        alert(`Game played! You earned $${data.earnedRevenue} and it was added to your wallet. New wallet balance: $${data.newWalletBalance}`);
-        fetchGames(); // Refresh the games list to show updated stats
-      } else {
-        alert("Failed to play game");
-      }
-    } catch (error) {
-      console.error("Error playing game:", error);
-      alert("Error playing game");
+    // Redirect to spin-wheel page for spin-wheel game
+    if (gameName.toLowerCase().includes('spin') || gameName.toLowerCase().includes('wheel')) {
+      window.location.href = '/spin-wheel';
+    } else {
+      // For other games, you can add different routes
+      console.log(`Playing game: ${gameName}`);
     }
   };
 
@@ -122,7 +110,7 @@ export default function Games() {
                     <Button 
                       className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:bg-accent transition-colors duration-200"
                       data-testid={`button-play-${game.name.toLowerCase().replace(/\s+/g, '-')}`}
-                      onClick={() => playGame(game.id)}
+                      onClick={() => playGame(game.id, game.name)}
                     >
                       Play {game.name}
                     </Button>

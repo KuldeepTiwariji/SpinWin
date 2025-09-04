@@ -50,6 +50,22 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const bettingConfig = pgTable("betting_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  gameType: text("game_type").notNull().unique(), // 'spin_wheel'
+  minBet: integer("min_bet").notNull().default(10),
+  maxBet: integer("max_bet").notNull().default(10000),
+  minNumber: integer("min_number").notNull().default(1),
+  maxNumber: integer("max_number").notNull().default(100),
+  exactMatchMultiplier: integer("exact_match_multiplier").notNull().default(50),
+  oneAwayMultiplier: integer("one_away_multiplier").notNull().default(10),
+  twoThreeAwayMultiplier: integer("two_three_away_multiplier").notNull().default(5),
+  fourFiveAwayMultiplier: integer("four_five_away_multiplier").notNull().default(2),
+  isActive: text("is_active").notNull().default("true"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -98,6 +114,31 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   status: true,
 });
 
+export const insertBettingConfigSchema = createInsertSchema(bettingConfig).pick({
+  gameType: true,
+  minBet: true,
+  maxBet: true,
+  minNumber: true,
+  maxNumber: true,
+  exactMatchMultiplier: true,
+  oneAwayMultiplier: true,
+  twoThreeAwayMultiplier: true,
+  fourFiveAwayMultiplier: true,
+  isActive: true,
+});
+
+export const updateBettingConfigSchema = createInsertSchema(bettingConfig).pick({
+  minBet: true,
+  maxBet: true,
+  minNumber: true,
+  maxNumber: true,
+  exactMatchMultiplier: true,
+  oneAwayMultiplier: true,
+  twoThreeAwayMultiplier: true,
+  fourFiveAwayMultiplier: true,
+  isActive: true,
+}).partial();
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertGame = z.infer<typeof insertGameSchema>;
@@ -109,3 +150,6 @@ export type Wallet = typeof wallets.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertWallet = z.infer<typeof insertWalletSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type BettingConfig = typeof bettingConfig.$inferSelect;
+export type InsertBettingConfig = z.infer<typeof insertBettingConfigSchema>;
+export type UpdateBettingConfig = z.infer<typeof updateBettingConfigSchema>;
